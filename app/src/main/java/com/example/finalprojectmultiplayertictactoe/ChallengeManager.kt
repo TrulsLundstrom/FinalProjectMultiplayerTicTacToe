@@ -1,4 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe
 
-class ChallengeManager {
+// hanterar förfrågningar av spel utmaningar
+class ChallengeManager{
+
 }

@@ -1,4 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe
 
-class Lobby {
+// hanterar lobby funktioner och spelar kommunikation.
+class Lobby{
+
 }

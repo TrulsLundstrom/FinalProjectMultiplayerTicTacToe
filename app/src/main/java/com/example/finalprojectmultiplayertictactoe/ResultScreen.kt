@@ -1,4 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe
 
-class ResultScreen {
+// ger resultatet (dvs vinnst, förlust eller oavgjort) och ger alternativet att gå tillbaka till lobbyn
+class ResultScreen{
+
 }

@@ -1,4 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe
 
-class GameBoard {
+// representerar själva brädet och hanterar placeringen av symboler (dvs X och O) samt kontrollerar om en vinnst skedde
+class GameBoard{
+
 }

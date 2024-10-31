@@ -1,4 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe
 
-class Player {
+// representerar en spelare
+class Player{
+
 }

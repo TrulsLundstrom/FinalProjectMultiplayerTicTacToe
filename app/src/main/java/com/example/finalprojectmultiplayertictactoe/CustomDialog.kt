@@ -1,4 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe
 
-class CustomDialog {
+// visar meddelanden, som t.ex acceptera (eller tacka nej) till utmaningar.
+class CustomDialog{
+
 }
