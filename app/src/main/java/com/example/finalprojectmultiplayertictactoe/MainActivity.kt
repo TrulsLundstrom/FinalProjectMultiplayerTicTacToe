@@ -13,35 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.finalprojectmultiplayertictactoe.ui.theme.FinalProjectMultiplayerTicTacToeTheme
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+class MainActivity : ComponentActivity(){
+
+    override fun onCreate(savedInstanceState: Bundle?){
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            FinalProjectMultiplayerTicTacToeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+
+        setContent{
+            FinalProjectMultiplayerTicTacToeTheme{
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    FinalProjectMultiplayerTicTacToeTheme {
-        Greeting("Android")
     }
 }
