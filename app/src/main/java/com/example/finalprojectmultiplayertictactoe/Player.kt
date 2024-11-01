@@ -2,7 +2,9 @@ package com.example.finalprojectmultiplayertictactoe
 
 // representerar en spelare
 class Player{
-    val id: String
-    val name: String
-    var isReady: Boolean = false
+    val name: String = ""
+    val symbol: String = ""
+
+    val id: String? = null
+
 }

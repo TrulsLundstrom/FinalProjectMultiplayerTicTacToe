@@ -31,6 +31,12 @@ class ResultScreen{
         // skriv här logiken för att visa ett meddelande om det är oavgjort
     }
 
+    // metod som ska returnera vinnarens namn
+    private fun getOpponentName(winner: String): String{
+
+        return ""
+    }
+
     // metod för gå tillbaka till lobbyn
     fun returnToLobby(){
         // skriv här logiken för att gå tillbaka till lobbyn

@@ -6,7 +6,7 @@ class NetworkManager{
     // metod för att ansluta till en server
     fun connectToServer(): Boolean{ // jag är osäker om Boolean ska returneras. Men jag har det såhär just nu iallafall
 
-        return
+        return true // ÄNDRA (KANSKE)
     }
 
     // skickar ett meddelande att en spelare är redo
@@ -17,17 +17,18 @@ class NetworkManager{
     // tar emot meddelandet som indikerade att motståndaren är redo
     fun reciveReadyMessage(): Boolean{
 
+        return true // ÄNDRA (KANSKE)
     }
 
     // metod för att skicka meddelanden
-    fun sendMessage(message: String){
+    fun sendMessage(message: String){ // ta kanske bort denna
 
     }
 
     // metod för att ta emot meddelanden från andra spelare
-    fun reciveMessage(): String{
+    fun reciveMessage(): String{ // ta kanske bort denna
 
-        return
+        return "" // ÄNDRA
     }
 
     // metod för att koppla bort från servern

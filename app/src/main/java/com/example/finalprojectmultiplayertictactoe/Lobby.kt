@@ -11,7 +11,7 @@ class Lobby{
     // metod för att visa alla spelare i lobbyn
     fun showPlayers(): List<Player>{
 
-        return // SKRIV NÅGOT HÄR
+        return emptyList()// ÄNDRA
     }
 
     // metod för att lämna lobbyn

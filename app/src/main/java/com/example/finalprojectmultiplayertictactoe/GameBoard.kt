@@ -7,19 +7,19 @@ class GameBoard{
     // metod som kontrollerar om vinnst har hänt
     fun checkWin(): Boolean{
 
-        return
+        return true // ÄNDRA (KANSKE)
     }
 
     // metod som kontrollerar om det är oavgjort
     fun checkDraw(): Boolean{
 
-        return
+        return true // ÄNDRA (KANSKE)
     }
 
     // metod som utför ett drag
     fun makeMove(player: String, x: Int, y: Int): Boolean{
 
-        return
+        return true // ÄNDRA (KANSKE)
     }
 
     // metod som återställer brädet
