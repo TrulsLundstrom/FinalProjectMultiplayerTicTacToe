@@ -4,16 +4,19 @@ package com.example.finalprojectmultiplayertictactoe
 class GameBoard{
     private val board: Array<Array<String?>> = Array(3) { arrayOfNulls<String?>(3) } // 2D array
 
+    // metod som kontrollerar om vinnst har hänt
     fun checkWin(): Boolean{
 
         return
     }
 
+    // metod som kontrollerar om det är oavgjort
     fun checkDraw(): Boolean{
 
         return
     }
 
+    // metod som utför ett drag
     fun makeMove(player: String, x: Int, y: Int): Boolean{
 
         return

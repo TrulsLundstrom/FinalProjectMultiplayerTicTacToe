@@ -3,20 +3,16 @@ package com.example.finalprojectmultiplayertictactoe
 // hanterar logik: spelstatus, vems drag, etc... (och kontrollerar giltighet av drag osv)
 class GameViewModel{
 
-    /*
-    skriv de variabler som behövs är (om det ens behövs)
-
-    */
-
     // metod för att starta ett nytt spel
     fun startNewGame(player1: String, player2: String){
-        // skriv logiken här för att starta ett nytt spel
+
     }
 
-
-    // gör draget senare vid GameBoard
+    // gör draget senare vid GameBoard. Det är inte GameViewModel som utför själva draget, den anropar istället GameBoard
+    // makeMove hanterar draget och uppdaterar tillstånd
+    // obs: denna har ett annat antal inparametrar än den i GameBoard klassen
+    // genom polymorphism så kan man anropa metoder/funktioner med samma namn, eftersom de har olika inparametrar.
     fun makeMove(x: Int, y: Int): Boolean{
-        // skriv logiken för att utföra drag på brädan och uppdatera sammtidigt tillståndet
 
         return // SKRIV NÅGOT HÄR
     }

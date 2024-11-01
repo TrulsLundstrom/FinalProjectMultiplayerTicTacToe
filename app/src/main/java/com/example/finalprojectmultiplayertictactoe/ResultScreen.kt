@@ -3,12 +3,6 @@ package com.example.finalprojectmultiplayertictactoe
 // ger resultatet (dvs vinnst, förlust eller oavgjort) och ger alternativet att gå tillbaka till lobbyn
 class ResultScreen{
 
-    /*
-    skriv de variabler som behövs är (om det ens behövs)
-
-     */
-
-
     // metod för att visa resultatet
     fun showResult(winner: String?, isDraw: Boolean){
         // skriv här logiken för att visa resultatet, t.ex uppdatera UI:n
