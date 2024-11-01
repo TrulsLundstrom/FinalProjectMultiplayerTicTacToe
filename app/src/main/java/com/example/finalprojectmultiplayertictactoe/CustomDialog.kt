@@ -4,7 +4,7 @@ package com.example.finalprojectmultiplayertictactoe
 class CustomDialog{
 
     // metod för att visa dialogen med ett meddelande och alternativ (accept eller decline)
-    fun showChallengeDiaglog(){ // FUNDERA VAD FÖR INPARAMETRAR SOM DU SEN KOMMER BEHÖVA HÄR
+    fun showChallengeDiaglog(player: Player){
 
     }
 
