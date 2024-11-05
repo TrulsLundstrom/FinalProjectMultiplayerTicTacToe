@@ -5,13 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 
 import androidx.compose.runtime.getValue
+
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
-import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
-
 import com.example.finalprojectmultiplayertictactoe.ui.theme.GameBoard
+import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
 
 
 // hanterar appens livscycel och navigerar
@@ -22,7 +22,8 @@ class MainActivity : ComponentActivity(){
 
         setContent{
             var playerName by remember { mutableStateOf<String?>(null) }
-            val boardState = remember { Array(3) { arrayOfNulls<String>(3) } }
+            var boardState by remember { mutableStateOf(Array(3) { arrayOfNulls<String>(3) }) }
+            var currentPlayer by remember { mutableStateOf("X") } // första symbolen som placeras ut är "X"
 
             if(playerName == null){
                 PlayerNameInputScreen { enteredName ->
@@ -32,10 +33,14 @@ class MainActivity : ComponentActivity(){
             else{
                 GameBoard(
                     boardState = boardState,
-                    onCellClick = { x, y -> // obs: x = rad, y = kolumn
+                    onCellClick = { x, y ->
 
-                        // skriv sen kod här som hanterar drag
-
+                        if(boardState[x][y] == null){ // om rutan är tom, så ska symbolen som representerar den nuvarande spelaren placeras i en ruta
+                            boardState = boardState.copyOf().apply{ // skapar en ny kopia av boardState med uppdaterad ruta
+                                this[x][y] = currentPlayer
+                            }
+                            currentPlayer = if(currentPlayer == "X") "O" else "X" // växlar mellan "X" (spelare 1) och "O" (spelare 2)
+                        }
                     }
                 )
             }

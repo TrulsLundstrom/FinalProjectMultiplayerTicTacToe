@@ -1,10 +1,16 @@
 package com.example.finalprojectmultiplayertictactoe
 
 // representerar en spelare
-class Player{
-    val name: String = ""
-    val symbol: String = ""
+class Player(val name: String, val symbol: String, val id: String? = null) // alternativ 1
 
-    val id: String? = null
 
-}
+
+// alternativ 2:
+
+// class Player{
+  // val name: String = ""
+  // val symbol: String = ""
+
+  //  val id: String? = null
+
+//}
