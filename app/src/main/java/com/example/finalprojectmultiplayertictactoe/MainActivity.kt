@@ -1,6 +1,7 @@
 package com.example.finalprojectmultiplayertictactoe
 
 import android.os.Bundle
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 
@@ -13,6 +14,16 @@ import androidx.compose.runtime.setValue
 
 import com.example.finalprojectmultiplayertictactoe.ui.theme.GameBoard
 import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
 
 
 // hanterar appens livscycel och navigerar
@@ -36,32 +47,44 @@ class MainActivity : ComponentActivity(){
                 }
             }
             else{
-                GameBoard(
-                    boardState = boardState,
-                    onCellClick = { x, y ->
 
-                        if(boardState[x][y] == null && resultMessage == null){ // om rutan är tom, så ska symbolen som representerar den nuvarande spelaren placeras i en ruta
-                            boardState = boardState.copyOf().apply { // skapar en ny kopia av boardState med uppdaterad ruta
-                                    this[x][y] = currentPlayer
-                            }
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Text(
+                        text = if(currentPlayer == "X") "$player1Name's turn" else "$player2Name's turn",
+                        fontSize = 42.sp,
+                        modifier = Modifier.padding(top = 128.dp)
+                    )
 
-                            if(gameLogic.checkWinner(boardState, currentPlayer)){
-                                resultMessage = if(currentPlayer == "X"){
-                                    "$player1Name has won!" // spelare 1 har vunnit
+                    GameBoard(
+                        boardState = boardState,
+                        onCellClick = { x, y ->
+
+                            if(boardState[x][y] == null && resultMessage == null){ // om rutan är tom, så ska symbolen som representerar den nuvarande spelaren placeras i en ruta
+                                boardState = boardState.copyOf().apply { // skapar en ny kopia av boardState med uppdaterad ruta
+                                        this[x][y] = currentPlayer
+                                }
+
+                                if(gameLogic.checkWinner(boardState, currentPlayer)){
+                                    resultMessage = if(currentPlayer == "X"){
+                                        "$player1Name has won!" // spelare 1 har vunnit
+                                    }
+                                    else{
+                                        "$player2Name has won!" // spelare 2 har vunnit
+                                    }
+                                }
+                                else if(boardState.all { row -> row.all { it != null } }){ // om alla rutor är fyllda så blir det oavgjort
+                                    resultMessage = "It's a draw!"
                                 }
                                 else{
-                                    "$player2Name has won!" // spelare 2 har vunnit
+                                    currentPlayer = if(currentPlayer == "X") "O" else "X" // växlar mellan "X" (spelare 1) och "O" (spelare 2)
                                 }
                             }
-                            else if(boardState.all { row -> row.all { it != null } }){ // om alla rutor är fyllda så blir det oavgjort
-                                resultMessage = "It's a draw!"
-                            }
-                            else{
-                                currentPlayer = if(currentPlayer == "X") "O" else "X" // växlar mellan "X" (spelare 1) och "O" (spelare 2)
-                            }
                         }
-                    }
-                )
+                    )
+                }
             }
             resultMessage?.let {
                 Text(text = it)
