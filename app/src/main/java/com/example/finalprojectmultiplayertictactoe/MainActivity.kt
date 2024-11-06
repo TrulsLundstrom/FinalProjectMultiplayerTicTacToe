@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.Text
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,8 @@ class MainActivity : ComponentActivity(){
             var playerName by remember { mutableStateOf<String?>(null) }
             var boardState by remember { mutableStateOf(Array(3) { arrayOfNulls<String>(3) }) }
             var currentPlayer by remember { mutableStateOf("X") } // första symbolen som placeras ut är "X"
+            val gameLogic = GameLogic() // objekt/instans av den nya klassen GameLogic som hanterar om det är vinnst/förlust/oavgjort
+            var winnerMessage by remember { mutableStateOf<String?>(null) }
 
             if(playerName == null){
                 PlayerNameInputScreen { enteredName ->
@@ -39,11 +42,23 @@ class MainActivity : ComponentActivity(){
                             boardState = boardState.copyOf().apply{ // skapar en ny kopia av boardState med uppdaterad ruta
                                 this[x][y] = currentPlayer
                             }
-                            currentPlayer = if(currentPlayer == "X") "O" else "X" // växlar mellan "X" (spelare 1) och "O" (spelare 2)
+
+                            if(gameLogic.checkWinner(boardState, currentPlayer)){
+                                winnerMessage = "$playerName has won" // var innan $currentPlayer
+                            }
+                            else{
+                                currentPlayer = if(currentPlayer == "X") "O" else "X" // växlar mellan "X" (spelare 1) och "O" (spelare 2)
+                            }
                         }
                     }
                 )
             }
+
+            winnerMessage?.let{
+                Text(text = it)
+            }
+
         }
     }
 }
+
