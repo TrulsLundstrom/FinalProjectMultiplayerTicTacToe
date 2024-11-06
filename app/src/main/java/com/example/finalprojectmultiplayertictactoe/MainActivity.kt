@@ -22,15 +22,17 @@ class MainActivity : ComponentActivity(){
         super.onCreate(savedInstanceState)
 
         setContent{
-            var playerName by remember { mutableStateOf<String?>(null) }
-            var boardState by remember { mutableStateOf(Array(3) { arrayOfNulls<String>(3) }) }
+            var player1Name by remember { mutableStateOf<String?>(null) }
+            val player2Name by remember { mutableStateOf("Player 2") } // placeholder namn för spelare 2
             var currentPlayer by remember { mutableStateOf("X") } // första symbolen som placeras ut är "X"
-            val gameLogic = GameLogic() // objekt/instans av den nya klassen GameLogic som hanterar om det är vinnst/förlust/oavgjort
-            var winnerMessage by remember { mutableStateOf<String?>(null) }
 
-            if(playerName == null){
+            var boardState by remember { mutableStateOf(Array(3) { arrayOfNulls<String>(3) }) }
+            val gameLogic = GameLogic() // objekt/instans av den nya klassen GameLogic som hanterar om det är vinnst/förlust/oavgjort
+            var resultMessage by remember { mutableStateOf<String?>(null) }
+
+            if(player1Name == null){
                 PlayerNameInputScreen { enteredName ->
-                    playerName = enteredName // sparar/lagrar spelarens namn
+                    player1Name = enteredName // sparar/lagrar spelarens namn
                 }
             }
             else{
@@ -38,13 +40,21 @@ class MainActivity : ComponentActivity(){
                     boardState = boardState,
                     onCellClick = { x, y ->
 
-                        if(boardState[x][y] == null){ // om rutan är tom, så ska symbolen som representerar den nuvarande spelaren placeras i en ruta
-                            boardState = boardState.copyOf().apply{ // skapar en ny kopia av boardState med uppdaterad ruta
-                                this[x][y] = currentPlayer
+                        if(boardState[x][y] == null && resultMessage == null){ // om rutan är tom, så ska symbolen som representerar den nuvarande spelaren placeras i en ruta
+                            boardState = boardState.copyOf().apply { // skapar en ny kopia av boardState med uppdaterad ruta
+                                    this[x][y] = currentPlayer
                             }
 
                             if(gameLogic.checkWinner(boardState, currentPlayer)){
-                                winnerMessage = "$playerName has won" // var innan $currentPlayer
+                                resultMessage = if(currentPlayer == "X"){
+                                    "$player1Name has won!" // spelare 1 har vunnit
+                                }
+                                else{
+                                    "$player2Name has won!" // spelare 2 har vunnit
+                                }
+                            }
+                            else if(boardState.all { row -> row.all { it != null } }){ // om alla rutor är fyllda så blir det oavgjort
+                                resultMessage = "It's a draw!"
                             }
                             else{
                                 currentPlayer = if(currentPlayer == "X") "O" else "X" // växlar mellan "X" (spelare 1) och "O" (spelare 2)
@@ -53,12 +63,11 @@ class MainActivity : ComponentActivity(){
                     }
                 )
             }
-
-            winnerMessage?.let{
+            resultMessage?.let {
                 Text(text = it)
             }
-
         }
     }
 }
+
 
