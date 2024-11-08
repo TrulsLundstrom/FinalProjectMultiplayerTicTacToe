@@ -49,48 +49,10 @@ class MainActivity : ComponentActivity(){
 
             NavHost(navController = navController, startDestination = "nameInput"){
                 composable("nameInput"){
-
-                    if(player1Name == null){
-                        PlayerNameInputScreen { enteredName ->
-                            player1Name = enteredName
-                        }
+                    PlayerNameInputScreen { enteredName ->
+                        player1Name = enteredName
+                        navController.navigate("lobby")
                     }
-                    else{
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ){
-                            Text(
-                                text = if(currentPlayer == "X") "$player1Name's turn" else "$player2Name's turn",
-                                fontSize = 42.sp,
-                                modifier = Modifier.padding(top = 128.dp)
-                            )
-
-                            GameBoard(
-                                boardState = boardState,
-                                onCellClick = { x, y ->
-                                    if(boardState[x][y] == null && resultMessage == null){
-                                        boardState = boardState.copyOf().apply { this[x][y] = currentPlayer }
-
-                                        if(gameLogic.checkWinner(boardState, currentPlayer)){
-                                            resultMessage = if(currentPlayer == "X") "$player1Name has won!" else "$player2Name has won!"
-                                            navController.navigate("result")
-                                        }
-                                        else if(boardState.all { row -> row.all { it != null } }){
-                                            resultMessage = "It's a draw!"
-                                            navController.navigate("result")
-                                        }
-                                        else{
-                                            currentPlayer = if(currentPlayer == "X") "O" else "X"
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-                composable("result"){
-                   ResultScreen(resultMessage = resultMessage, navController = navController)
                 }
 
                 composable("lobby"){
@@ -101,6 +63,45 @@ class MainActivity : ComponentActivity(){
                     ){
                         Text(text = "Lobby (NOTHING HERE YET)", fontSize = 24.sp)
                     }
+                }
+
+                composable("game"){
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        Text(
+                            text = if (currentPlayer == "X") "$player1Name's turn" else "$player2Name's turn",
+                            fontSize = 42.sp,
+                            modifier = Modifier.padding(top = 128.dp)
+                        )
+
+                        GameBoard(
+                            boardState = boardState,
+                            onCellClick = { x, y ->
+
+                                if(boardState[x][y] == null && resultMessage == null){
+                                    boardState = boardState.copyOf().apply { this[x][y] = currentPlayer }
+
+                                    if(gameLogic.checkWinner(boardState, currentPlayer)){
+                                        resultMessage = if (currentPlayer == "X") "$player1Name has won!" else "$player2Name has won!"
+                                        navController.navigate("result")
+                                    }
+                                    else if(boardState.all { row -> row.all { it != null } }){
+                                        resultMessage = "It's a draw!"
+                                        navController.navigate("result")
+                                    }
+                                    else{
+                                        currentPlayer = if (currentPlayer == "X") "O" else "X"
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+
+                composable("result"){
+                    ResultScreen(resultMessage = resultMessage, navController = navController)
                 }
             }
         }
