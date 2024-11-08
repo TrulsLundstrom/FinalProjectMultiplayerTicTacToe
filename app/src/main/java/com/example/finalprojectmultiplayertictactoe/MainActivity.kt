@@ -19,6 +19,7 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScre
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,6 +63,12 @@ class MainActivity : ComponentActivity(){
                         verticalArrangement = Arrangement.Center
                     ){
                         Text(text = "Lobby (NOTHING HERE YET)", fontSize = 24.sp)
+                        Button(
+                            onClick = { navController.navigate("game") },
+                            modifier = Modifier.padding(top = 16.dp)
+                        ){
+                            Text(text = "Start game")
+                        }
                     }
                 }
 
@@ -79,7 +86,6 @@ class MainActivity : ComponentActivity(){
                         GameBoard(
                             boardState = boardState,
                             onCellClick = { x, y ->
-
                                 if(boardState[x][y] == null && resultMessage == null){
                                     boardState = boardState.copyOf().apply { this[x][y] = currentPlayer }
 
