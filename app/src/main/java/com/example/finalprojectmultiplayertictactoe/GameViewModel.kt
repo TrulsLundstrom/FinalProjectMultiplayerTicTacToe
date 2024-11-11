@@ -1,43 +1,47 @@
 package com.example.finalprojectmultiplayertictactoe
 
-// hanterar logik: spelstatus, vems drag, etc... (och kontrollerar giltighet av drag osv)
-class GameViewModel{
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
 
-    // denna metoden ska indikera att en spelare är redo och skicka ett meddelande till motståndaren
-    fun playerReady(){
 
+// hanterar logik: spelstatus, vems drag det ska bli, brädet och resultatmeddelanden.
+class GameViewModel : ViewModel(){
+
+    var player1Name = mutableStateOf<String?>(null)
+    val player2Name = "Player 2" // placeholder-namn för spelare 2
+    var currentPlayer = mutableStateOf("X")
+
+    var boardState = mutableStateOf(Array(3) { arrayOfNulls<String>(3) })
+    var resultMessage = mutableStateOf<String?>(null)
+
+    private val gameLogic = GameLogic()
+
+    fun setPlayer1Name(name: String){
+        player1Name.value = name
     }
 
-    fun opponentReady(){
+    fun makeMove(x: Int, y: Int){
+        if(boardState.value[x][y] == null && resultMessage.value == null){
+            val newBoardState = boardState.value.map { it.copyOf() }.toTypedArray()
+            newBoardState[x][y] = currentPlayer.value
+            boardState.value = newBoardState
 
+            if(gameLogic.checkWinner(newBoardState, currentPlayer.value)){
+                resultMessage.value = if(currentPlayer.value == "X") "${player1Name.value} has won!" else "$player2Name has won!"
+            }
+            else if(newBoardState.all { row -> row.all { it != null } }){
+                resultMessage.value = "It's a draw!"
+            }
+            else{
+                currentPlayer.value = if(currentPlayer.value == "X") "O" else "X"
+            }
+        }
     }
 
-    // metod som kontrollerar om båda spelarna är redo, och isåfall startar spelet
-    private fun checkIfBothPlayersReady(){
-
-    }
-
-    // startar spelet
-    private fun startGame(){
-
-    }
-
-    // metod för att starta ett NYTT spel
-    fun startNewGame(player1: String, player2: String){
-
-    }
-
-    // gör draget via GameBoard. Det är inte GameViewModel som utför själva draget, den anropar istället GameBoard
-    // makeMove (i denna klassen) hanterar draget och uppdaterar tillstånd
-    fun makeMove(x: Int, y: Int): Boolean{
-
-        return true // ÄNDRA (KANSKE)
-    }
-
-    // på liknande sätt som metoden ovanför, så är det INTE klassen GameViewModel som utför själva återställningen av brädet-
-    // , GameViewModel anropar istället metoden resetGame i GameBoard.
     fun resetGame(){
-
+        boardState.value = Array(3) { arrayOfNulls(3) } // jag skrev först boardState.value = Array(3) { arrayOfNulls<String>(3) } men jag fick då en varning
+        currentPlayer.value = "X"
+        resultMessage.value = null
     }
 
 }

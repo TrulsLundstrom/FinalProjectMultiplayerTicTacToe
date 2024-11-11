@@ -22,25 +22,22 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun GameBoard(boardState: Array<Array<String?>>, onCellClick: (Int, Int) -> Unit){
-
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Column{
-            for(i in 0..2){
-                Row{
-                    for(j in 0..2){
-                        Box(
-                            modifier = Modifier
-                                .size(128.dp) // var innan 64
-                                .border(1.dp, Color.Black)
-                                .clickable { onCellClick(i, j) },
+        for(i in 0..2){
+            Row{
+                for(j in 0..2){
+                    Box(
+                        modifier = Modifier
+                            .size(128.dp)
+                            .border(1.dp, Color.Black)
+                            .clickable { onCellClick(i, j) },
                             contentAlignment = Alignment.Center
-                        ){
-                            Text(boardState[i][j] ?: "", fontSize = 48.sp) // var innan 24
-                        }
+                    ){
+                        Text(boardState[i][j] ?: "", fontSize = 48.sp)
                     }
                 }
             }

@@ -4,14 +4,11 @@ import android.os.Bundle
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 
 import androidx.compose.runtime.getValue
 import androidx.compose.material3.Text
-
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 
 import com.example.finalprojectmultiplayertictactoe.ui.theme.GameBoard
 import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
@@ -34,24 +31,24 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 
 // hanterar appens livscycel och navigerar
 class MainActivity : ComponentActivity(){
+    private val gameViewModel: GameViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
 
         setContent{
             val navController = rememberNavController()
 
-            var player1Name by remember { mutableStateOf<String?>(null) }
-            val player2Name = "Player 2" // placeholder-namn för spelare 2
-            var currentPlayer by remember { mutableStateOf("X") }
+            val player1Name by gameViewModel.player1Name
+            val currentPlayer by gameViewModel.currentPlayer
 
-            var boardState by remember { mutableStateOf(Array(3) { arrayOfNulls<String>(3) }) }
-            val gameLogic = GameLogic()
-            var resultMessage by remember { mutableStateOf<String?>(null) }
+            val boardState by gameViewModel.boardState
+            val resultMessage by gameViewModel.resultMessage
 
             NavHost(navController = navController, startDestination = "nameInput"){
                 composable("nameInput"){
                     PlayerNameInputScreen { enteredName ->
-                        player1Name = enteredName
+                        gameViewModel.setPlayer1Name(enteredName)
                         navController.navigate("lobby")
                     }
                 }
@@ -78,7 +75,7 @@ class MainActivity : ComponentActivity(){
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
                         Text(
-                            text = if (currentPlayer == "X") "$player1Name's turn" else "$player2Name's turn",
+                            text = if(currentPlayer == "X") "$player1Name's turn" else "${gameViewModel.player2Name}'s turn",
                             fontSize = 42.sp,
                             modifier = Modifier.padding(top = 128.dp)
                         )
@@ -86,20 +83,9 @@ class MainActivity : ComponentActivity(){
                         GameBoard(
                             boardState = boardState,
                             onCellClick = { x, y ->
-                                if(boardState[x][y] == null && resultMessage == null){
-                                    boardState = boardState.copyOf().apply { this[x][y] = currentPlayer }
-
-                                    if(gameLogic.checkWinner(boardState, currentPlayer)){
-                                        resultMessage = if (currentPlayer == "X") "$player1Name has won!" else "$player2Name has won!"
-                                        navController.navigate("result")
-                                    }
-                                    else if(boardState.all { row -> row.all { it != null } }){
-                                        resultMessage = "It's a draw!"
-                                        navController.navigate("result")
-                                    }
-                                    else{
-                                        currentPlayer = if (currentPlayer == "X") "O" else "X"
-                                    }
+                                gameViewModel.makeMove(x, y)
+                                if(resultMessage != null){
+                                    navController.navigate("result")
                                 }
                             }
                         )
@@ -107,7 +93,10 @@ class MainActivity : ComponentActivity(){
                 }
 
                 composable("result"){
-                    ResultScreen(resultMessage = resultMessage, navController = navController)
+                    ResultScreen(resultMessage = resultMessage, navController = navController){
+                        gameViewModel.resetGame()
+                        navController.navigate("lobby")
+                    }
                 }
             }
         }

@@ -19,7 +19,7 @@ import androidx.navigation.NavController
 
 
 @Composable
-fun ResultScreen(resultMessage: String?, navController: NavController){
+fun ResultScreen(resultMessage: String?, navController: NavController, onReset: () -> Unit){
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -33,7 +33,11 @@ fun ResultScreen(resultMessage: String?, navController: NavController){
 
         Button(
             onClick = {
-                navController.navigate("lobby")
+                onReset()
+                navController.navigate("lobby") { popUpTo("game"){
+                        inclusive = true
+                    }
+                }
             },
             modifier = Modifier.padding(16.dp)
         ){
