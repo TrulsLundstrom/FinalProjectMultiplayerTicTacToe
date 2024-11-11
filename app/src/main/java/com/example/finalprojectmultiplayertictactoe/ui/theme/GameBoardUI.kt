@@ -35,7 +35,7 @@ fun GameBoard(boardState: Array<Array<String?>>, onCellClick: (Int, Int) -> Unit
                             .size(128.dp)
                             .border(1.dp, Color.Black)
                             .clickable { onCellClick(i, j) },
-                            contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center
                     ){
                         Text(boardState[i][j] ?: "", fontSize = 48.sp)
                     }

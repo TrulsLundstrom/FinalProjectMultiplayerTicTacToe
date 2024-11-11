@@ -39,7 +39,7 @@ fun PlayerNameInputScreen(onNameEntered: (String) -> Unit){
                 text = "Name must be at least 3 characters long",
                 color = Color.Red,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
