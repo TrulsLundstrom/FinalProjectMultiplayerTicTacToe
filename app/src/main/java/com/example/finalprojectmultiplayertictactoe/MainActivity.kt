@@ -138,7 +138,20 @@ class MainActivity : ComponentActivity(){
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ){
-                        Text(text = "Challenge requests", fontSize = 32.sp)
+                        Text(text = "Challenge requests", fontSize = 30.sp)
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Button(
+                            onClick = { navController.navigate("lobby") },
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .width(300.dp)
+                                .height(60.dp)
+                                .align(Alignment.CenterHorizontally)
+                        ){
+                            Text(text = "Return to lobby", fontSize = 18.sp)
+                        }
                     }
                 }
             }
