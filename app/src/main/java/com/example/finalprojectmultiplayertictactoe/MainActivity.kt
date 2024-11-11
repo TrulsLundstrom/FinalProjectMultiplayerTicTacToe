@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 
 import androidx.compose.runtime.getValue
 import androidx.compose.material3.Text
@@ -14,8 +15,11 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.GameBoard
 import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 
 import androidx.compose.ui.Alignment
@@ -54,17 +58,44 @@ class MainActivity : ComponentActivity(){
                 }
 
                 composable("lobby"){
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier.fillMaxSize()
                     ){
-                        Text(text = "Lobby (NOTHING HERE YET)", fontSize = 24.sp)
-                        Button(
-                            onClick = { navController.navigate("game") },
-                            modifier = Modifier.padding(top = 16.dp)
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(16.dp),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.Top
                         ){
-                            Text(text = "Start game")
+                            Text(text = "Lobby", fontSize = 42.sp)
+                            Text(text = "Players in the lobby:", fontSize = 24.sp)
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(text = "$player1Name", fontSize = 24.sp)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(text = gameViewModel.player2Name, fontSize = 24.sp)
+
+                            Button(
+                                onClick = { navController.navigate("game") },
+                                modifier = Modifier.padding(top = 16.dp)
+                            ){
+                                Text(text = "Start game")
+                            }
+                        }
+
+                        Button(
+                            onClick = { navController.navigate("challengeRequests") },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp)
+                                .width(300.dp)
+                                .height(60.dp)
+                        ){
+                            Text(text = "Challenge requests", fontSize = 18.sp)
                         }
                     }
                 }
@@ -96,6 +127,18 @@ class MainActivity : ComponentActivity(){
                     ResultScreen(resultMessage = resultMessage, navController = navController){
                         gameViewModel.resetGame()
                         navController.navigate("lobby")
+                    }
+                }
+
+                composable("challengeRequests"){
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ){
+                        Text(text = "Challenge requests", fontSize = 32.sp)
                     }
                 }
             }
