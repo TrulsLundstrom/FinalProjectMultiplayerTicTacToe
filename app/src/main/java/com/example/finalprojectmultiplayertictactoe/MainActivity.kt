@@ -33,7 +33,15 @@ import androidx.navigation.compose.composable
 import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 
 
+data class Player(
+    val playerId: String = "",
+    var name: String = "",
+    
+    var invitation: String = ""
+)
+
 // hanterar appens livscycel och navigerar
+
 class MainActivity : ComponentActivity(){
     private val gameViewModel: GameViewModel by viewModels()
 
