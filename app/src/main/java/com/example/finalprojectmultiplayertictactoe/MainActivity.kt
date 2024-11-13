@@ -36,7 +36,6 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 data class Player(
     val playerId: String = "",
     var name: String = "",
-    
     var invitation: String = ""
 )
 
