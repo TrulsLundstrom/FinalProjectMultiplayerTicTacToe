@@ -39,7 +39,7 @@ class GameViewModel : ViewModel(){
     }
 
     fun resetGame(){
-        boardState.value = Array(3) { arrayOfNulls(3) } // jag skrev först boardState.value = Array(3) { arrayOfNulls<String>(3) } men jag fick då en varning
+        boardState.value = Array(3) { arrayOfNulls(3) }
         currentPlayer.value = "X"
         resultMessage.value = null
     }

@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 
 @Composable
 fun ResultScreen(resultMessage: String?, navController: NavController, onReset: () -> Unit){
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
