@@ -30,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.finalprojectmultiplayertictactoe.ui.theme.ChallengeRequestScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 
 
@@ -138,29 +139,9 @@ class MainActivity : ComponentActivity(){
                 }
 
                 composable("challengeRequests"){
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ){
-                        Text(text = "Challenge requests", fontSize = 30.sp)
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Button(
-                            onClick = { navController.navigate("lobby") },
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .width(300.dp)
-                                .height(60.dp)
-                                .align(Alignment.CenterHorizontally)
-                        ){
-                            Text(text = "Return to lobby", fontSize = 18.sp)
-                        }
-                    }
+                    ChallengeRequestScreen(navController = navController)
                 }
+
             }
         }
     }
