@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+
 import androidx.compose.runtime.Composable
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import androidx.navigation.NavController
+
 import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 @Composable
@@ -44,7 +48,10 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Button(onClick = { navController.navigate("game") }){
+            Button(onClick = {
+                gameViewModel.resetGame()
+                navController.navigate("game")
+            }){
                 Text(text = "Invite to a challenge")
             }
         }
