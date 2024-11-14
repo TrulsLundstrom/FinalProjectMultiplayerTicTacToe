@@ -8,19 +8,35 @@ import com.google.firebase.firestore.FirebaseFirestore
 // hanterar logik: spelstatus, vems drag det ska bli, brädet och resultatmeddelanden.
 class GameViewModel : ViewModel(){
 
-    private val db = FirebaseFirestore.getInstance()
-
     var player1Name = mutableStateOf<String?>(null)
-    val player2Name = "Player 2" // placeholder-namn för spelare 2
+    val player2Name = mutableStateOf<String?>(null)
     var currentPlayer = mutableStateOf("X")
 
     var boardState = mutableStateOf(Array(3) { arrayOfNulls<String>(3) })
     var resultMessage = mutableStateOf<String?>(null)
 
+    private val db = FirebaseFirestore.getInstance()
     private val gameLogic = GameLogic()
 
     fun setPlayer1Name(name: String){
         player1Name.value = name
+        updatePlayerNameInFirestore(name)
+    }
+
+    private fun updatePlayerNameInFirestore(name: String){
+        val playerData = hashMapOf("name" to name)
+
+        db.collection("players")
+            .document("player1")
+            .set(playerData)
+            .addOnSuccessListener {
+                // lyckades uppdatera namnet för första spelaren
+                // vet inte vad jag bör ha här. På föreläsningen så användes: if(error != null){ playerList.value = value.toObjects() }
+            }
+            .addOnFailureListener { e ->
+                // misslyckades med att uppdatera namnet för första spelaren
+                // vet inte vad jag bör ha här. På föreläsningen så användes: if(error != null){ return @addSnapShotListener }
+            }
     }
 
     fun makeMove(x: Int, y: Int){

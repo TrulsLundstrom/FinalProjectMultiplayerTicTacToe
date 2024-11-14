@@ -35,6 +35,7 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
     val player1Name = gameViewModel.player1Name.value
     var players by remember { mutableStateOf<List<Player>>(emptyList()) }
 
+
     LaunchedEffect(Unit){
         gameViewModel.fetchPlayers {fetchedPlayers ->
             players = fetchedPlayers
@@ -64,7 +65,8 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
         Row(
             verticalAlignment = Alignment.CenterVertically
         ){
-            Text(text = gameViewModel.player2Name, fontSize = 24.sp)
+
+            Text(text = gameViewModel.player2Name.value ?: "Waiting for player 2...", fontSize = 24.sp)
 
             Spacer(modifier = Modifier.width(16.dp))
 
