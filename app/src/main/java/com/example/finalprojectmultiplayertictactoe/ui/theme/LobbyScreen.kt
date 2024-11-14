@@ -11,6 +11,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,11 +22,24 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 import com.example.finalprojectmultiplayertictactoe.GameViewModel
+import com.example.finalprojectmultiplayertictactoe.Player
+
+import androidx.compose.runtime.LaunchedEffect
+
+import androidx.compose.runtime.*
+
 
 @Composable
 fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
     val player1Name = gameViewModel.player1Name.value
+    var players by remember { mutableStateOf<List<Player>>(emptyList()) }
+
+    LaunchedEffect(Unit){
+        gameViewModel.fetchPlayers {fetchedPlayers ->
+            players = fetchedPlayers
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -40,6 +55,11 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
         Text(text = "$player1Name", fontSize = 24.sp)
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        players.forEach { player ->
+            Text(text = player.name, fontSize = 24.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -70,3 +90,4 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
         }
     }
 }
+

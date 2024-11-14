@@ -1,11 +1,14 @@
 package com.example.finalprojectmultiplayertictactoe
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
 
+import androidx.lifecycle.ViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 // hanterar logik: spelstatus, vems drag det ska bli, brädet och resultatmeddelanden.
 class GameViewModel : ViewModel(){
+
+    private val db = FirebaseFirestore.getInstance()
 
     var player1Name = mutableStateOf<String?>(null)
     val player2Name = "Player 2" // placeholder-namn för spelare 2
@@ -42,6 +45,25 @@ class GameViewModel : ViewModel(){
         boardState.value = Array(3) { arrayOfNulls(3) }
         currentPlayer.value = "X"
         resultMessage.value = null
+    }
+
+
+
+    fun fetchPlayers(callback: (List<Player>) -> Unit){
+        db.collection("players").get()
+            .addOnSuccessListener { result ->
+                val players = result.map { document ->
+                    Player(
+                        playerId = document.id,
+                        name = document.getString("name") ?: "",
+                        invitation = document.getString("invitation") ?: ""
+                    )
+                }
+                callback(players)
+            }
+            .addOnFailureListener { e->
+                println("Error getting players: $e")
+            }
     }
 
 }
