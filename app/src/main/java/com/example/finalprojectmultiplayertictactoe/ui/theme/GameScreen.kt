@@ -3,11 +3,16 @@ package com.example.finalprojectmultiplayertictactoe.ui.theme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 
 import androidx.navigation.NavController
 
@@ -16,34 +21,31 @@ import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 @Composable
 fun GameScreen(navController: NavController, gameViewModel: GameViewModel){
-
-    val player1Name = gameViewModel.player1Name.value
-    val player2Name = gameViewModel.player2Name
-    val currentPlayer = gameViewModel.currentPlayer.value
-
-    val boardState = gameViewModel.boardState
-    val resultMessage = gameViewModel.resultMessage
+    val boardState by gameViewModel.boardState
+    val resultMessage by gameViewModel.resultMessage
+    val currentPlayerName by remember { derivedStateOf { gameViewModel.getCurrentPlayerName() } }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Text(
-            text = if(currentPlayer == "X") "$player1Name's turn" else "$player2Name's turn",
+            text = "$currentPlayerName's turn",
             fontSize = 42.sp,
             modifier = Modifier.padding(top = 128.dp)
         )
 
         GameBoard(
-            boardState = boardState.value,
+            boardState = boardState,
             onCellClick = { x, y ->
-                val previousResult = resultMessage.value
                 gameViewModel.makeMove(x, y)
-
-                if(resultMessage.value != previousResult && resultMessage.value != null){
-                    navController.navigate("result")
-                }
             }
         )
+
+        resultMessage?.let {
+            LaunchedEffect(resultMessage){
+                navController.navigate("result")
+            }
+        }
     }
 }

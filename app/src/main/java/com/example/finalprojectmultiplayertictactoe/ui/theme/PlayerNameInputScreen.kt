@@ -8,11 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 
 @Composable
-fun PlayerNameInputScreen(onNameEntered: (String) -> Unit){
-
+fun PlayerNameInputScreen(gameViewModel: GameViewModel, onContinue: () -> Unit){
     var playerName by remember { mutableStateOf(TextFieldValue("")) }
     var isNameValid by remember { mutableStateOf(true) }
 
@@ -42,12 +42,12 @@ fun PlayerNameInputScreen(onNameEntered: (String) -> Unit){
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             if(playerName.text.isNotEmpty() && isNameValid){
-                onNameEntered(playerName.text)
+                gameViewModel.addPlayerToLobby(playerName.text)
+                onContinue()
             }
         },
             enabled = isNameValid

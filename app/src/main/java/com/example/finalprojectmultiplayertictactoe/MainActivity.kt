@@ -16,6 +16,7 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.LobbyScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.GameScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
+import java.util.concurrent.CountDownLatch
 
 
 data class Player(
@@ -27,21 +28,26 @@ data class Player(
 
 // hanterar appens livscycel och navigerar
 class MainActivity : ComponentActivity(){
-
     private val gameViewModel: GameViewModel by viewModels()
+    private var playerDocumentId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
 
         setContent{
             val navController = rememberNavController()
+            gameViewModel.playerDocumentId.observe(this){ documentId ->
+                playerDocumentId = documentId
+            }
 
             NavHost(navController = navController, startDestination = "nameInput"){
                 composable("nameInput"){
-                    PlayerNameInputScreen { enteredName ->
-                        gameViewModel.setPlayer1Name(enteredName)
-                        navController.navigate("lobby")
-                    }
+                    PlayerNameInputScreen(
+                        gameViewModel = gameViewModel,
+                        onContinue = {
+                            navController.navigate("lobby")
+                        }
+                    )
                 }
 
                 composable("lobby"){
@@ -61,6 +67,22 @@ class MainActivity : ComponentActivity(){
 
                 composable("challengeRequests"){
                     ChallengeRequestScreen(navController = navController)
+                }
+            }
+        }
+    }
+
+    override fun onStop(){
+        super.onStop()
+        playerDocumentId?.let { documentId ->
+            val countDownLatch = CountDownLatch(1)
+            gameViewModel.deletePlayerFromLobby(documentId){ isSuccess ->
+                countDownLatch.countDown()
+                if(isSuccess){
+                    println("PLAYER DOCUMENT DELETED SUCCESSFULLY")
+                }
+                else{
+                    println("FAILED TO DELETE PLAYER DOCUMENT")
                 }
             }
         }

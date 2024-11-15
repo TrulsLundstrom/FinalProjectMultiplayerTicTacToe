@@ -11,8 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,24 +21,19 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 import com.example.finalprojectmultiplayertictactoe.GameViewModel
-import com.example.finalprojectmultiplayertictactoe.Player
+
 
 import androidx.compose.runtime.LaunchedEffect
 
-import androidx.compose.runtime.*
+
 
 
 @Composable
 fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
-
-    val player1Name = gameViewModel.player1Name.value
-    var players by remember { mutableStateOf<List<Player>>(emptyList()) }
-
+    val players = gameViewModel.players.value
 
     LaunchedEffect(Unit){
-        gameViewModel.fetchPlayers {fetchedPlayers ->
-            players = fetchedPlayers
-        }
+        gameViewModel.listenToLobbyPlayers()
     }
 
     Column(
@@ -53,11 +47,7 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(text = "$player1Name", fontSize = 24.sp)
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        players.forEach { player ->
+        players.forEach{ player ->
             Text(text = player.name, fontSize = 24.sp)
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -65,9 +55,6 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
         Row(
             verticalAlignment = Alignment.CenterVertically
         ){
-
-            Text(text = gameViewModel.player2Name.value ?: "Waiting for player 2...", fontSize = 24.sp)
-
             Spacer(modifier = Modifier.width(16.dp))
 
             Button(onClick = {
@@ -77,7 +64,6 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
                 Text(text = "Invite to a challenge")
             }
         }
-
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
