@@ -128,7 +128,7 @@ class GameViewModel : ViewModel(){
         return when(currentPlayerIndex.value){
             0 -> "X"
             1 -> "O"
-            else -> "P${currentPlayerIndex.value + 1}"
+            else -> "P${currentPlayerIndex.value + 1}" // denna är temporär. Just nu när man klickar på "Invite to a challenge" så startas en omgång fast med alla spelarna som finns i lobbyn, för att underlätta så får spelare med en id > 2 en symbol som är P3, P4 etc... (SKA ÄNDRAS SENARE)
         }
     }
 

@@ -1,9 +1,11 @@
 package com.example.finalprojectmultiplayertictactoe.ui.theme
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -47,22 +49,22 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        players.forEach{ player ->
-            Text(text = player.name, fontSize = 24.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+        players.forEach { player ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(text = player.name, fontSize = 24.sp)
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Button(onClick = {
-                gameViewModel.resetGame()
-                navController.navigate("game")
-            }){
-                Text(text = "Invite to a challenge")
+                Button(onClick = {
+                    gameViewModel.resetGame()
+                    navController.navigate("game")
+                }){
+                    Text(text = "Invite to a challenge") // FUNGERAR JUST NU SOM EN START KNAPP SOM STARTAR SPELET MED ALLA SPELARE I LOBBYN
+                }
             }
+            Spacer(modifier = Modifier.height(8.dp))
         }
         Spacer(modifier = Modifier.weight(1f))
 
