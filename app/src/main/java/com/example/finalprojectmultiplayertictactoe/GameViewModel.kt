@@ -22,16 +22,38 @@ class GameViewModel : ViewModel(){
 
     val playerDocumentId: LiveData<String?> = _playerDocumentId
 
-    fun addPlayerToLobby(playerName: String){
-        val playerData = hashMapOf("name" to playerName)
-
+    fun addPlayerToLobby(playerName: String) {
         db.collection("players")
-            .add(playerData)
-            .addOnSuccessListener { documentReference ->
-                _playerDocumentId.value = documentReference.id
-            }
-            .addOnFailureListener { _ ->
-               println("Added player to lobby")
+            .orderBy("playerId", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { documents ->
+
+                val nextPlayerId = if(documents.isEmpty){
+                    1
+                }
+                else{
+                    val lastPlayerId = documents.first().getString("playerId")
+                    lastPlayerId?.removePrefix("player")?.toIntOrNull()?.plus(1) ?: 1
+                }
+
+                val newPlayerId = "player$nextPlayerId"
+
+                val playerData = hashMapOf(
+                    "name" to playerName,
+                    "playerId" to newPlayerId,
+                    "invitation" to "notSent"
+                )
+
+                db.collection("players")
+                    .add(playerData)
+                    .addOnSuccessListener { documentReference ->
+                        _playerDocumentId.value = documentReference.id
+                        println("Player added with ID: ${documentReference.id}")
+                    }
+                    .addOnFailureListener { e ->
+                        println("Error adding player: $e")
+                    }
             }
     }
 

@@ -79,14 +79,12 @@ class MainActivity : ComponentActivity(){
             gameViewModel.deletePlayerFromLobby(documentId){ isSuccess ->
                 countDownLatch.countDown()
                 if(isSuccess){
-                    println("PLAYER DOCUMENT DELETED SUCCESSFULLY")
+                    println("player document deleted successfully")
                 }
                 else{
-                    println("FAILED TO DELETE PLAYER DOCUMENT")
+                    println("failed to delete document")
                 }
             }
         }
     }
 }
-
-
