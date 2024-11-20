@@ -26,25 +26,21 @@ class GameViewModel : ViewModel(){
     private var playersListener: ListenerRegistration? = null
 
     private val _currentPlayerIndex = MutableStateFlow(0)
-    // val currentPlayerIndex: StateFlow<Int> get() = _currentPlayerIndex
 
     private val _playerDocumentId = MutableStateFlow<String?>(null)
     val playerDocumentId: StateFlow<String?> get() = _playerDocumentId
 
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
-            .orderBy("playerId", com.google.firebase.firestore.Query.Direction.DESCENDING)
-            .limit(1)
             .get()
             .addOnSuccessListener { documents ->
 
-                val nextPlayerId = if(documents.isEmpty){
-                    1
+                val existingPlayerIds = documents.mapNotNull { document ->
+                    document.getString("playerId")?.removePrefix("player")?.toIntOrNull()
                 }
-                else{
-                    val lastPlayerId = documents.first().getString("playerId")
-                    lastPlayerId?.removePrefix("player")?.toIntOrNull()?.plus(1) ?: 1
-                }
+                val nextPlayerId = (1..existingPlayerIds.size + 1)
+                    .firstOrNull { it !in existingPlayerIds }
+                    ?: existingPlayerIds.maxOrNull()?.plus(1) ?: 1
 
                 val newPlayerId = "player$nextPlayerId"
 

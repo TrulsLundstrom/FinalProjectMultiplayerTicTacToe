@@ -36,8 +36,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
     val players by gameViewModel.players.collectAsStateWithLifecycle()
-    // val currentPlayerId = gameViewModel.playerDocumentId.value
-
     val currentPlayerId by gameViewModel.playerDocumentId.collectAsStateWithLifecycle(initialValue = null)
 
     LaunchedEffect(Unit){
