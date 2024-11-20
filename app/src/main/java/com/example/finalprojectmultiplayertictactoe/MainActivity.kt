@@ -25,6 +25,13 @@ data class Player(
     var invitation: String = ""
 )
 
+data class Challenge(
+    val challenger: String = "",
+    val challenged: String = "",
+    val status: String = ""
+)
+
+
 
 // hanterar appens livscycel och navigerar
 class MainActivity : ComponentActivity(){

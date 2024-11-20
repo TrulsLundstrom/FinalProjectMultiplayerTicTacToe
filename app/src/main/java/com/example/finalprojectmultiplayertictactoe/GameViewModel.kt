@@ -22,7 +22,7 @@ class GameViewModel : ViewModel(){
 
     val playerDocumentId: LiveData<String?> = _playerDocumentId
 
-    fun addPlayerToLobby(playerName: String) {
+    fun addPlayerToLobby(playerName: String){
         db.collection("players")
             .orderBy("playerId", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(1)
@@ -128,7 +128,7 @@ class GameViewModel : ViewModel(){
         return when(currentPlayerIndex.value){
             0 -> "X"
             1 -> "O"
-            else -> "P${currentPlayerIndex.value + 1}" // denna är temporär. Just nu när man klickar på "Invite to a challenge" så startas en omgång fast med alla spelarna som finns i lobbyn, för att underlätta så får spelare med en id > 2 en symbol som är P3, P4 etc... (SKA ÄNDRAS SENARE)
+            else -> "P${currentPlayerIndex.value + 1}" // else-satsen kommer aldrig att ske, men jag får kompileringsfel om jag tar bort denna. Jag tar bort denna i framtiden.
         }
     }
 
@@ -139,5 +139,16 @@ class GameViewModel : ViewModel(){
     override fun onCleared(){
         super.onCleared()
         stopListeningToLobbyPlayers()
+    }
+
+    fun startGameWithPlayer(playerId: String){
+        val invitedPlayer = players.value.find { it.playerId == playerId }
+
+        if(invitedPlayer != null){
+            players.value = listOf(invitedPlayer, players.value.find { it.playerId == _playerDocumentId.value }!!)
+            currentPlayerIndex.value = 0
+        }
+
+        resetGame()
     }
 }

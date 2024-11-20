@@ -59,9 +59,10 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
                 Button(onClick = {
                     gameViewModel.resetGame()
+                    gameViewModel.startGameWithPlayer(player.playerId)
                     navController.navigate("game")
                 }){
-                    Text(text = "Invite to a challenge") // FUNGERAR JUST NU SOM EN START KNAPP SOM STARTAR SPELET MED ALLA SPELARE I LOBBYN
+                    Text(text = "Invite to a challenge")
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
