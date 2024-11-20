@@ -143,9 +143,10 @@ class GameViewModel : ViewModel(){
 
     fun startGameWithPlayer(playerId: String){
         val invitedPlayer = players.value.find { it.playerId == playerId }
+        val currentPlayer = players.value.find { it.playerId == _playerDocumentId.value}
 
-        if(invitedPlayer != null){
-            players.value = listOf(invitedPlayer, players.value.find { it.playerId == _playerDocumentId.value }!!)
+        if(invitedPlayer != null && currentPlayer != null){
+            players.value = listOf(currentPlayer, invitedPlayer)
             currentPlayerIndex.value = 0
         }
 
