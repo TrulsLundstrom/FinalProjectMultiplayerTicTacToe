@@ -26,13 +26,19 @@ import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 
 
 
 @Composable
 fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
-    val players = gameViewModel.players.value
+    val players by gameViewModel.players.collectAsStateWithLifecycle()
+    // val currentPlayerId = gameViewModel.playerDocumentId.value
+
+    val currentPlayerId by gameViewModel.playerDocumentId.collectAsStateWithLifecycle(initialValue = null)
 
     LaunchedEffect(Unit){
         gameViewModel.listenToLobbyPlayers()
@@ -57,12 +63,15 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
             ){
                 Text(text = player.name, fontSize = 24.sp)
 
-                Button(onClick = {
-                    gameViewModel.resetGame()
-                    gameViewModel.startGameWithPlayer(player.playerId)
-                    navController.navigate("game")
-                }){
-                    Text(text = "Invite to a challenge")
+                if(currentPlayerId != null && player.playerId != currentPlayerId){
+                    Button(onClick = {
+                        gameViewModel.resetGame()
+                        gameViewModel.sendChallenge(player.playerId)
+                        gameViewModel.startGameWithPlayer(player.playerId)
+                        navController.navigate("game")
+                    }){
+                        Text(text = "Invite to a challenge")
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))

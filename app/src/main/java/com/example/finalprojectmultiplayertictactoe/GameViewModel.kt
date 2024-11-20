@@ -1,26 +1,35 @@
 package com.example.finalprojectmultiplayertictactoe
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-
 import androidx.lifecycle.ViewModel
+
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+
+
 // hanterar logik: spelstatus, vems drag det ska bli, brädet och resultatmeddelanden.
 class GameViewModel : ViewModel(){
-    var players = mutableStateOf<List<Player>>(emptyList())
-    var boardState = mutableStateOf(Array(3) { arrayOfNulls<String>(3) })
-    var resultMessage = mutableStateOf<String?>(null)
+    private val _players = MutableStateFlow<List<Player>>(emptyList())
+    val players: StateFlow<List<Player>> get() = _players
+
+    private val _boardState = MutableStateFlow(Array(3) { arrayOfNulls<String>(3) })
+    val boardState: StateFlow<Array<Array<String?>>> get() = _boardState
+
+    private val _resultMessage = MutableStateFlow<String?>(null)
+    val resultMessage: StateFlow<String?> get() = _resultMessage
 
     private val db = FirebaseFirestore.getInstance()
     private val gameLogic = GameLogic()
     private var playersListener: ListenerRegistration? = null
-    private var currentPlayerIndex = mutableStateOf(0)
-    private val _playerDocumentId = MutableLiveData<String?>(null)
 
-    val playerDocumentId: LiveData<String?> = _playerDocumentId
+    private val _currentPlayerIndex = MutableStateFlow(0)
+    // val currentPlayerIndex: StateFlow<Int> get() = _currentPlayerIndex
+
+    private val _playerDocumentId = MutableStateFlow<String?>(null)
+    val playerDocumentId: StateFlow<String?> get() = _playerDocumentId
 
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
@@ -60,21 +69,20 @@ class GameViewModel : ViewModel(){
     fun listenToLobbyPlayers(){
         playersListener = db.collection("players")
             .addSnapshotListener { snapshots, e ->
-
                 if(e != null){
                     println("Listen failed: $e")
                     return@addSnapshotListener
                 }
 
-                if(snapshots != null){
-                    val updatedPlayers = snapshots.map { document ->
+                snapshots?.let {
+                    val updatedPlayers = it.map { document ->
                         Player(
                             playerId = document.id,
                             name = document.getString("name") ?: "",
                             invitation = document.getString("invitation") ?: ""
                         )
                     }
-                    players.value = updatedPlayers
+                    _players.value = updatedPlayers
                 }
             }
     }
@@ -93,47 +101,47 @@ class GameViewModel : ViewModel(){
             }
     }
 
-    fun stopListeningToLobbyPlayers(){
+    private fun stopListeningToLobbyPlayers(){
         playersListener?.remove()
     }
 
     fun makeMove(x: Int, y: Int){
-        if(boardState.value[x][y] == null && resultMessage.value == null){
-            val newBoardState = boardState.value.map { it.copyOf() }.toTypedArray()
+        if(_boardState.value[x][y] == null && _resultMessage.value == null){
+            val newBoardState = _boardState.value.map { it.copyOf() }.toTypedArray()
             val currentPlayerSymbol = getCurrentPlayerSymbol()
 
             newBoardState[x][y] = currentPlayerSymbol
-            boardState.value = newBoardState
+            _boardState.value = newBoardState
 
             if(gameLogic.checkWinner(newBoardState, currentPlayerSymbol)){
-                resultMessage.value = "${getCurrentPlayerName()} has won!"
+                _resultMessage.value = "${getCurrentPlayerName()} has won!"
 
             }
             else if(newBoardState.all { row -> row.all { it != null } }){
-                resultMessage.value = "It's a draw!"
+                _resultMessage.value = "It's a draw!"
             }
             else{
-                currentPlayerIndex.value = (currentPlayerIndex.value + 1) % players.value.size
+                _currentPlayerIndex.value = (_currentPlayerIndex.value + 1) % _players.value.size
             }
         }
     }
 
     fun resetGame(){
-        boardState.value = Array(3) { arrayOfNulls(3) }
-        currentPlayerIndex.value = 0
-        resultMessage.value = null
+        _boardState.value = Array(3) { arrayOfNulls(3) }
+        _currentPlayerIndex.value = 0
+        _resultMessage.value = null
     }
 
     private fun getCurrentPlayerSymbol(): String{
-        return when(currentPlayerIndex.value){
+        return when(_currentPlayerIndex.value){
             0 -> "X"
             1 -> "O"
-            else -> "P${currentPlayerIndex.value + 1}" // else-satsen kommer aldrig att ske, men jag får kompileringsfel om jag tar bort denna. Jag tar bort denna i framtiden.
+            else -> throw IllegalStateException("Invalid player index: ${_currentPlayerIndex.value}")
         }
     }
 
     fun getCurrentPlayerName(): String{
-        return players.value.getOrNull(currentPlayerIndex.value)?.name ?: "Player ${currentPlayerIndex.value + 1}"
+        return _players.value.getOrNull(_currentPlayerIndex.value)?.name ?: "Player ${_currentPlayerIndex.value + 1}"
     }
 
     override fun onCleared(){
@@ -142,14 +150,34 @@ class GameViewModel : ViewModel(){
     }
 
     fun startGameWithPlayer(playerId: String){
-        val invitedPlayer = players.value.find { it.playerId == playerId }
-        val currentPlayer = players.value.find { it.playerId == _playerDocumentId.value}
+        val invitedPlayer = _players.value.find { it.playerId == playerId }
+        val currentPlayer = _players.value.find { it.playerId == _playerDocumentId.value }
 
         if(invitedPlayer != null && currentPlayer != null){
-            players.value = listOf(currentPlayer, invitedPlayer)
-            currentPlayerIndex.value = 0
+            _players.value = listOf(currentPlayer, invitedPlayer)
+            _currentPlayerIndex.value = 0
         }
-
         resetGame()
+    }
+
+    fun sendChallenge(challengedPlayerId: String){
+        val currentPlayerId = _playerDocumentId.value
+
+        if(currentPlayerId != null){
+            val challengeData = hashMapOf(
+                "senderId" to currentPlayerId,
+                "receiverId" to challengedPlayerId,
+                "status" to "pending"
+            )
+
+            db.collection("challenges")
+                .add(challengeData)
+                .addOnSuccessListener { documentReference ->
+                    println("Challenge sent with ID: ${documentReference.id}")
+                }
+                .addOnFailureListener { e ->
+                    println("Error sending challenge: $e")
+                }
+        }
     }
 }

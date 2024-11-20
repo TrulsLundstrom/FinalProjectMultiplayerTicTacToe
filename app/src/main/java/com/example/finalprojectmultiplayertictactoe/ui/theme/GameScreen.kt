@@ -1,18 +1,17 @@
 package com.example.finalprojectmultiplayertictactoe.ui.theme
 
 import androidx.compose.foundation.layout.*
+
 import androidx.compose.material3.Text
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 
 import androidx.navigation.NavController
 
@@ -21,9 +20,9 @@ import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 @Composable
 fun GameScreen(navController: NavController, gameViewModel: GameViewModel){
-    val boardState by gameViewModel.boardState
-    val resultMessage by gameViewModel.resultMessage
-    val currentPlayerName by remember { derivedStateOf { gameViewModel.getCurrentPlayerName() } }
+    val boardState = gameViewModel.boardState.collectAsState().value
+    val resultMessage = gameViewModel.resultMessage.collectAsState().value
+    val currentPlayerName = gameViewModel.getCurrentPlayerName()
 
     Column(
         modifier = Modifier.fillMaxSize(),

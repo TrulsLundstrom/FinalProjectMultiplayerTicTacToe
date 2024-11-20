@@ -6,6 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 import androidx.navigation.compose.rememberNavController
 
 import androidx.navigation.compose.NavHost
@@ -16,6 +19,7 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.LobbyScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.GameScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
+
 import java.util.concurrent.CountDownLatch
 
 
@@ -26,9 +30,9 @@ data class Player(
 )
 
 data class Challenge(
-    val challenger: String = "",
-    val challenged: String = "",
-    val status: String = ""
+    val senderId: String = "",
+    val receiverId: String = "",
+    val status: String = "pending"
 )
 
 
@@ -43,9 +47,9 @@ class MainActivity : ComponentActivity(){
 
         setContent{
             val navController = rememberNavController()
-            gameViewModel.playerDocumentId.observe(this){ documentId ->
-                playerDocumentId = documentId
-            }
+            val playerDocumentIdState = gameViewModel.playerDocumentId.collectAsState()
+
+            playerDocumentId = playerDocumentIdState.value
 
             NavHost(navController = navController, startDestination = "nameInput"){
                 composable("nameInput"){
@@ -66,7 +70,9 @@ class MainActivity : ComponentActivity(){
                 }
 
                 composable("result"){
-                    ResultScreen(resultMessage = gameViewModel.resultMessage.value, navController = navController){
+                    val resultMessage by gameViewModel.resultMessage.collectAsState()
+
+                    ResultScreen(resultMessage = resultMessage, navController = navController){
                         gameViewModel.resetGame()
                         navController.navigate("lobby")
                     }
