@@ -30,6 +30,9 @@ class GameViewModel : ViewModel(){
     private val _playerDocumentId = MutableStateFlow<String?>(null)
     val playerDocumentId: StateFlow<String?> get() = _playerDocumentId
 
+    private val _challenges = MutableStateFlow<List<Challenge>>(emptyList())
+    val challenges: StateFlow<List<Challenge>> get() = _challenges
+
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
             .get()
@@ -145,6 +148,7 @@ class GameViewModel : ViewModel(){
         stopListeningToLobbyPlayers()
     }
 
+    // används inte just nu. Kommer användas senare
     fun startGameWithPlayer(playerId: String){
         val invitedPlayer = _players.value.find { it.playerId == playerId }
         val currentPlayer = _players.value.find { it.playerId == _playerDocumentId.value }
@@ -175,5 +179,48 @@ class GameViewModel : ViewModel(){
                     println("Error sending challenge: $e")
                 }
         }
+    }
+
+    fun listenToChallenges(playerId: String){
+        db.collection("challenges")
+            .whereEqualTo("receiverId", playerId)
+            .addSnapshotListener { snapshots, e ->
+                if(e != null){
+                    println("Listen failed: $e")
+                    return@addSnapshotListener
+                }
+
+                snapshots?.let {
+                    val updatedChallenges = it.documents.mapNotNull { document ->
+                        val senderId = document.getString("senderId") ?: return@mapNotNull null
+                        val receiverId = document.getString("receiverId") ?: return@mapNotNull null
+                        val status = document.getString("status") ?: "pending"
+                        Challenge(senderId = senderId, receiverId = receiverId, status = status)
+                    }
+                    _challenges.value = updatedChallenges
+                }
+            }
+    }
+
+    fun respondToChallenge(challenge: Challenge, accept: Boolean){
+        val newStatus = if(accept) "accepted" else "declined"
+
+        db.collection("challenges")
+            .whereEqualTo("senderId", challenge.senderId)
+            .whereEqualTo("receiverId", challenge.receiverId)
+            .get()
+            .addOnSuccessListener { snapshots ->
+                for(document in snapshots){
+                    db.collection("challenges")
+                        .document(document.id)
+                        .update("status", newStatus)
+                        .addOnSuccessListener {
+                            println("Challenge ${if (accept) "accepted" else "declined"}")
+                        }
+                        .addOnFailureListener { e ->
+                            println("Failed to update challenge: $e")
+                        }
+                }
+            }
     }
 }

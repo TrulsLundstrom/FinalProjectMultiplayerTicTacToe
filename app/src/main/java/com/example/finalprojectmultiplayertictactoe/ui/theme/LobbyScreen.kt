@@ -63,10 +63,7 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
                 if(currentPlayerId != null && player.playerId != currentPlayerId){
                     Button(onClick = {
-                        gameViewModel.resetGame()
                         gameViewModel.sendChallenge(player.playerId)
-                        gameViewModel.startGameWithPlayer(player.playerId)
-                        navController.navigate("game")
                     }){
                         Text(text = "Invite to a challenge")
                     }

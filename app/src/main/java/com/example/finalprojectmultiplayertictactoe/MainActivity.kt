@@ -29,13 +29,6 @@ data class Player(
     var invitation: String = ""
 )
 
-data class Challenge(
-    val senderId: String = "",
-    val receiverId: String = "",
-    val status: String = "pending"
-)
-
-
 
 // hanterar appens livscycel och navigerar
 class MainActivity : ComponentActivity(){
@@ -50,6 +43,10 @@ class MainActivity : ComponentActivity(){
             val playerDocumentIdState = gameViewModel.playerDocumentId.collectAsState()
 
             playerDocumentId = playerDocumentIdState.value
+
+            playerDocumentId?.let { id ->
+                gameViewModel.listenToChallenges(id)
+            }
 
             NavHost(navController = navController, startDestination = "nameInput"){
                 composable("nameInput"){
@@ -79,7 +76,7 @@ class MainActivity : ComponentActivity(){
                 }
 
                 composable("challengeRequests"){
-                    ChallengeRequestScreen(navController = navController)
+                    ChallengeRequestScreen(navController = navController, gameViewModel = gameViewModel)
                 }
             }
         }
