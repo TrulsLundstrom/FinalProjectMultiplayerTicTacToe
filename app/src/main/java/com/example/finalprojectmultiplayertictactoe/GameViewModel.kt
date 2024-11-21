@@ -148,7 +148,7 @@ class GameViewModel : ViewModel(){
         stopListeningToLobbyPlayers()
     }
 
-    // används inte just nu. Kommer användas senare
+    // används inte just nu. Kommer användas senare (kanske)
     fun startGameWithPlayer(playerId: String){
         val invitedPlayer = _players.value.find { it.playerId == playerId }
         val currentPlayer = _players.value.find { it.playerId == _playerDocumentId.value }
@@ -160,25 +160,34 @@ class GameViewModel : ViewModel(){
         resetGame()
     }
 
-    fun sendChallenge(challengedPlayerId: String){
-        val currentPlayerId = _playerDocumentId.value
-
-        if(currentPlayerId != null){
-            val challengeData = hashMapOf(
-                "senderId" to currentPlayerId,
-                "receiverId" to challengedPlayerId,
-                "status" to "pending"
-            )
-
-            db.collection("challenges")
-                .add(challengeData)
-                .addOnSuccessListener { documentReference ->
-                    println("Challenge sent with ID: ${documentReference.id}")
+    fun sendChallenge(senderId: String, receiverId: String){
+        db.collection("challenges")
+            .whereEqualTo("senderId", senderId)
+            .whereEqualTo("receiverId", receiverId)
+            .get()
+            .addOnSuccessListener { snapshots ->
+                if(!snapshots.isEmpty){
+                    println("A challenge already exists between these players.")
                 }
-                .addOnFailureListener { e ->
-                    println("Error sending challenge: $e")
+                else{
+                    val challenge = hashMapOf(
+                        "senderId" to senderId,
+                        "receiverId" to receiverId,
+                        "status" to "pending",
+                    )
+                    db.collection("challenges")
+                        .add(challenge)
+                        .addOnSuccessListener {
+                            println("Challenge sent successfully.")
+                        }
+                        .addOnFailureListener { e ->
+                            println("Failed to send challenge: $e")
+                        }
                 }
-        }
+            }
+            .addOnFailureListener { e ->
+                println("Failed to check existing challenges: $e")
+            }
     }
 
     fun listenToChallenges(playerId: String){
@@ -211,16 +220,32 @@ class GameViewModel : ViewModel(){
             .get()
             .addOnSuccessListener { snapshots ->
                 for(document in snapshots){
-                    db.collection("challenges")
-                        .document(document.id)
-                        .update("status", newStatus)
-                        .addOnSuccessListener {
-                            println("Challenge ${if (accept) "accepted" else "declined"}")
-                        }
-                        .addOnFailureListener { e ->
-                            println("Failed to update challenge: $e")
-                        }
+                    if(accept){
+                            db.collection("challenges")
+                            .document(document.id)
+                            .update("status", newStatus)
+                            .addOnSuccessListener {
+                                println("Challenge accepted")
+                            }
+                            .addOnFailureListener { e ->
+                                println("Failed to update challenge: $e")
+                            }
+                    }
+                    else{
+                        db.collection("challenges")
+                            .document(document.id)
+                            .delete()
+                            .addOnSuccessListener {
+                                println("Challenge declined and document deleted")
+                            }
+                            .addOnFailureListener { e ->
+                                println("Failed to delete challenge: $e")
+                            }
+                    }
                 }
+            }
+            .addOnFailureListener { e ->
+                println("Failed to fetch challenges: $e")
             }
     }
 }

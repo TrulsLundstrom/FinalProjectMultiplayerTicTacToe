@@ -49,14 +49,14 @@ fun ChallengeRequestScreen(navController: NavController, gameViewModel: GameView
                 Text(text = senderName, fontSize = 18.sp)
 
                 Row{
-                    Button( // inte färdig
+                    Button(
                         onClick = { gameViewModel.respondToChallenge(challenge, accept = true) },
                         modifier = Modifier.padding(end = 8.dp)
                     ){
                         Text("Accept")
                     }
 
-                    Button( // inte färdig
+                    Button(
                         onClick = { gameViewModel.respondToChallenge(challenge, accept = false) }
                     ){
                         Text("Decline")
