@@ -37,9 +37,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
     val players by gameViewModel.players.collectAsStateWithLifecycle()
     val currentPlayerId by gameViewModel.playerDocumentId.collectAsStateWithLifecycle(initialValue = null)
+    val challengeRequestCount by gameViewModel.challengeRequestCount.collectAsStateWithLifecycle(initialValue = 0)
 
     LaunchedEffect(Unit){
         gameViewModel.listenToLobbyPlayers()
+    }
+
+    LaunchedEffect(currentPlayerId){
+        if(currentPlayerId != null){
+            gameViewModel.listenToChallengeRequests()
+        }
     }
 
     Column(
@@ -72,6 +79,12 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
             Spacer(modifier = Modifier.height(8.dp))
         }
         Spacer(modifier = Modifier.weight(1f))
+
+        Text(
+            text = "You have $challengeRequestCount challenge request(s)",
+            fontSize = 20.sp,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
 
         Button(
             onClick = { navController.navigate("challengeRequests") },

@@ -33,6 +33,10 @@ class GameViewModel : ViewModel(){
     private val _challenges = MutableStateFlow<List<Challenge>>(emptyList())
     val challenges: StateFlow<List<Challenge>> get() = _challenges
 
+    private val _challengeRequestCount = MutableStateFlow(0)
+    val challengeRequestCount: StateFlow<Int> = _challengeRequestCount
+
+
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
             .get()
@@ -247,5 +251,22 @@ class GameViewModel : ViewModel(){
             .addOnFailureListener { e ->
                 println("Failed to fetch challenges: $e")
             }
+    }
+
+    fun listenToChallengeRequests(){
+        playerDocumentId.value?.let { playerId ->
+            db.collection("challenges")
+                .whereEqualTo("receiverId", playerId)
+                .addSnapshotListener { snapshot, exception ->
+                    if(exception != null){
+                        println("Listen failed: $exception")
+                        return@addSnapshotListener
+                    }
+
+                    if(snapshot != null){
+                        _challengeRequestCount.value = snapshot.size()
+                    }
+                }
+        }
     }
 }
