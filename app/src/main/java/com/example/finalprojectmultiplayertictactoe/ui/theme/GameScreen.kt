@@ -24,6 +24,10 @@ fun GameScreen(navController: NavController, gameViewModel: GameViewModel){
     val resultMessage = gameViewModel.resultMessage.collectAsState().value
     val currentPlayerName = gameViewModel.getCurrentPlayerName()
 
+    LaunchedEffect(Unit) {
+        gameViewModel.resetGame()
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally

@@ -30,6 +30,7 @@ data class Player(
 )
 
 
+
 // hanterar appens livscycel och navigerar
 class MainActivity : ComponentActivity(){
     private val gameViewModel: GameViewModel by viewModels()

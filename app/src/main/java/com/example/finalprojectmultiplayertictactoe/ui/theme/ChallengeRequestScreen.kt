@@ -50,7 +50,9 @@ fun ChallengeRequestScreen(navController: NavController, gameViewModel: GameView
 
                 Row{
                     Button(
-                        onClick = { gameViewModel.respondToChallenge(challenge, accept = true) },
+                        onClick = {
+                            gameViewModel.respondToChallenge(challenge, accept = true, navController = navController)
+                        },
                         modifier = Modifier.padding(end = 8.dp)
                     ){
                         Text("Accept")

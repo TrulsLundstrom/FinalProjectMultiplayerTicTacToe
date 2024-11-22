@@ -1,6 +1,7 @@
 package com.example.finalprojectmultiplayertictactoe
 
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -35,7 +36,6 @@ class GameViewModel : ViewModel(){
 
     private val _challengeRequestCount = MutableStateFlow(0)
     val challengeRequestCount: StateFlow<Int> = _challengeRequestCount
-
 
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
@@ -152,16 +152,23 @@ class GameViewModel : ViewModel(){
         stopListeningToLobbyPlayers()
     }
 
-    // används inte just nu. Kommer användas senare (kanske)
-    fun startGameWithPlayer(playerId: String){
-        val invitedPlayer = _players.value.find { it.playerId == playerId }
+    private fun startGameWithPlayer(senderId: String, receiverId: String? = null){
+        val invitedPlayer = _players.value.find { it.playerId == senderId }
         val currentPlayer = _players.value.find { it.playerId == _playerDocumentId.value }
 
         if(invitedPlayer != null && currentPlayer != null){
             _players.value = listOf(currentPlayer, invitedPlayer)
             _currentPlayerIndex.value = 0
+
+            receiverId?.let {
+                _playerDocumentId.value = it
+            }
+
+            resetGame()
         }
-        resetGame()
+        else{
+            println("Error: player not found")
+        }
     }
 
     fun sendChallenge(senderId: String, receiverId: String){
@@ -215,7 +222,7 @@ class GameViewModel : ViewModel(){
             }
     }
 
-    fun respondToChallenge(challenge: Challenge, accept: Boolean){
+    fun respondToChallenge(challenge: Challenge, accept: Boolean, navController: NavController? = null){
         val newStatus = if(accept) "accepted" else "declined"
 
         db.collection("challenges")
@@ -225,11 +232,17 @@ class GameViewModel : ViewModel(){
             .addOnSuccessListener { snapshots ->
                 for(document in snapshots){
                     if(accept){
-                            db.collection("challenges")
+                        db.collection("challenges")
                             .document(document.id)
                             .update("status", newStatus)
                             .addOnSuccessListener {
                                 println("Challenge accepted")
+
+                                startGameWithPlayer(challenge.senderId, challenge.receiverId)
+
+                                removeChallenge(challenge)
+
+                                navController?.navigate("game")
                             }
                             .addOnFailureListener { e ->
                                 println("Failed to update challenge: $e")
@@ -241,6 +254,8 @@ class GameViewModel : ViewModel(){
                             .delete()
                             .addOnSuccessListener {
                                 println("Challenge declined and document deleted")
+
+                                removeChallenge(challenge)
                             }
                             .addOnFailureListener { e ->
                                 println("Failed to delete challenge: $e")
@@ -252,6 +267,7 @@ class GameViewModel : ViewModel(){
                 println("Failed to fetch challenges: $e")
             }
     }
+
 
     fun listenToChallengeRequests(){
         playerDocumentId.value?.let { playerId ->
@@ -269,4 +285,15 @@ class GameViewModel : ViewModel(){
                 }
         }
     }
+
+    private fun removeChallenge(challenge: Challenge) {
+        _challenges.value = _challenges.value.filterNot {
+            it.senderId == challenge.senderId && it.receiverId == challenge.receiverId
+        }
+
+        if(_challengeRequestCount.value > 0){
+            _challengeRequestCount.value -= 1
+        }
+    }
+
 }
