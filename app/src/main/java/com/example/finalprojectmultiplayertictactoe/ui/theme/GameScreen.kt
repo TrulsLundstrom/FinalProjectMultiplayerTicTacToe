@@ -1,6 +1,8 @@
 package com.example.finalprojectmultiplayertictactoe.ui.theme
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
 
 import androidx.compose.material3.Text
 
@@ -24,30 +26,38 @@ fun GameScreen(navController: NavController, gameViewModel: GameViewModel){
     val resultMessage = gameViewModel.resultMessage.collectAsState().value
     val currentPlayerName = gameViewModel.getCurrentPlayerName()
 
-    LaunchedEffect(Unit) {
-        gameViewModel.resetGame()
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ){
-        Text(
-            text = "$currentPlayerName's turn",
-            fontSize = 42.sp,
-            modifier = Modifier.padding(top = 128.dp)
-        )
+        LaunchedEffect(Unit){
+            gameViewModel.resetGame()
+        }
 
-        GameBoard(
-            boardState = boardState,
-            onCellClick = { x, y ->
-                gameViewModel.makeMove(x, y)
-            }
-        )
+        Column(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ){
+            Text(
+                text = "$currentPlayerName's turn",
+                fontSize = 32.sp,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineMedium
+            )
 
-        resultMessage?.let {
-            LaunchedEffect(resultMessage){
-                navController.navigate("result")
+            GameBoard(
+                boardState = boardState,
+                onCellClick = { x, y ->
+                    gameViewModel.makeMove(x, y)
+                }
+            )
+
+            resultMessage?.let {
+                LaunchedEffect(resultMessage){
+                    navController.navigate("result")
+                }
             }
         }
     }

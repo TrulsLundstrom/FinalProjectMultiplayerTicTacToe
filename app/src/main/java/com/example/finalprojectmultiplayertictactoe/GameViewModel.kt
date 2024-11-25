@@ -231,30 +231,33 @@ class GameViewModel : ViewModel(){
             .get()
             .addOnSuccessListener { snapshots ->
                 for(document in snapshots){
+                    val challengeDocRef = db.collection("challenges").document(document.id)
+
                     if(accept){
-                        db.collection("challenges")
-                            .document(document.id)
-                            .update("status", newStatus)
+                        challengeDocRef.update("status", newStatus)
                             .addOnSuccessListener {
                                 println("Challenge accepted")
 
                                 startGameWithPlayer(challenge.senderId, challenge.receiverId)
 
-                                removeChallenge(challenge)
-
-                                navController?.navigate("game")
+                                challengeDocRef.delete()
+                                    .addOnSuccessListener {
+                                        println("Challenge document deleted after acceptance")
+                                        removeChallenge(challenge)
+                                        navController?.navigate("game")
+                                    }
+                                    .addOnFailureListener { e ->
+                                        println("Failed to delete challenge after acceptance: $e")
+                                    }
                             }
                             .addOnFailureListener { e ->
-                                println("Failed to update challenge: $e")
+                                println("Failed to update challenge status: $e")
                             }
                     }
                     else{
-                        db.collection("challenges")
-                            .document(document.id)
-                            .delete()
+                        challengeDocRef.delete()
                             .addOnSuccessListener {
                                 println("Challenge declined and document deleted")
-
                                 removeChallenge(challenge)
                             }
                             .addOnFailureListener { e ->

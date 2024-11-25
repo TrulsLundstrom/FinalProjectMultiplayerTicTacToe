@@ -5,9 +5,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
 
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 
 import androidx.navigation.compose.rememberNavController
 
@@ -49,35 +52,49 @@ class MainActivity : ComponentActivity(){
                 gameViewModel.listenToChallenges(id)
             }
 
-            NavHost(navController = navController, startDestination = "nameInput"){
-                composable("nameInput"){
-                    PlayerNameInputScreen(
-                        gameViewModel = gameViewModel,
-                        onContinue = {
+            MaterialTheme(
+                colorScheme = lightColorScheme(
+                    primary = Color(0xFF003366),
+                    secondary = Color(0xFF66AAFF),
+                    background = Color(0xFFF5F5F5),
+                    surface = Color(0xFFFFFFFF),
+                    onPrimary = Color(0xFFFFFFFF),
+                    onSecondary = Color(0xFF333333),
+                    onBackground = Color(0xFF333333),
+                    onSurface = Color(0xFF333333)
+                )
+            ){
+
+                NavHost(navController = navController, startDestination = "nameInput"){
+                    composable("nameInput"){
+                        PlayerNameInputScreen(
+                            gameViewModel = gameViewModel,
+                            onContinue = {
+                                navController.navigate("lobby")
+                            }
+                        )
+                    }
+
+                    composable("lobby"){
+                        LobbyScreen(navController = navController, gameViewModel = gameViewModel)
+                    }
+
+                    composable("game"){
+                        GameScreen(navController = navController, gameViewModel = gameViewModel)
+                    }
+
+                    composable("result"){
+                        val resultMessage by gameViewModel.resultMessage.collectAsState()
+
+                        ResultScreen(resultMessage = resultMessage, navController = navController){
+                            gameViewModel.resetGame()
                             navController.navigate("lobby")
                         }
-                    )
-                }
-
-                composable("lobby"){
-                    LobbyScreen(navController = navController, gameViewModel = gameViewModel)
-                }
-
-                composable("game"){
-                    GameScreen(navController = navController, gameViewModel = gameViewModel)
-                }
-
-                composable("result"){
-                    val resultMessage by gameViewModel.resultMessage.collectAsState()
-
-                    ResultScreen(resultMessage = resultMessage, navController = navController){
-                        gameViewModel.resetGame()
-                        navController.navigate("lobby")
                     }
-                }
 
-                composable("challengeRequests"){
-                    ChallengeRequestScreen(navController = navController, gameViewModel = gameViewModel)
+                    composable("challengeRequests"){
+                        ChallengeRequestScreen(navController = navController, gameViewModel = gameViewModel)
+                    }
                 }
             }
         }

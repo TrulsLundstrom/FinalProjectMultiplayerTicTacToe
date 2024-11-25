@@ -1,5 +1,6 @@
 package com.example.finalprojectmultiplayertictactoe.ui.theme
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
@@ -27,6 +31,7 @@ import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.font.FontWeight
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -52,49 +57,75 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.Start
+            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ){
-        Text(text = "Lobby", fontSize = 42.sp)
-        Text(text = "Players in the lobby:", fontSize = 30.sp)
+        Text(
+            text = "Lobby",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Players in the lobby:",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         players.forEach { player ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                elevation = CardDefaults.elevatedCardElevation(4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ){
-                Text(text = player.name, fontSize = 24.sp)
-
-                if(currentPlayerId != null && player.playerId != currentPlayerId){
-                    Button(onClick = {
-                        gameViewModel.sendChallenge(senderId = currentPlayerId!!, receiverId = player.playerId)
-                    }){
-                        Text(text = "Invite to a challenge")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text(
+                        text = player.name,
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if(currentPlayerId != null && player.playerId != currentPlayerId){
+                        Button(onClick = {
+                            gameViewModel.sendChallenge(senderId = currentPlayerId!!, receiverId = player.playerId)
+                        }){
+                            Text(text = "Challenge")
+                        }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
         }
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
             text = "You have $challengeRequestCount challenge request(s)",
-            fontSize = 20.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            fontSize = 18.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
         Button(
             onClick = { navController.navigate("challengeRequests") },
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
                 .padding(16.dp)
-                .width(300.dp)
+                .fillMaxWidth()
                 .height(60.dp)
         ){
-            Text(text = "Challenge requests", fontSize = 18.sp)
+            Text(text = "View Challenge Requests", fontSize = 18.sp)
         }
     }
 }
