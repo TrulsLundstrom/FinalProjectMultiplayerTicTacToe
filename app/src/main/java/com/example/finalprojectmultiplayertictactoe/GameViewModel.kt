@@ -10,14 +10,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
+data class GameBoard(
+    val cells: Map<String, String?> = mapOf(
+        "00" to null, "01" to null, "02" to null,
+        "10" to null, "11" to null, "12" to null,
+        "20" to null, "21" to null, "22" to null
+    ),
+    val player1: String = "",
+    val player2: String = "",
+    val currentPlayer: String = ""
+)
 
-// hanterar logik: spelstatus, vems drag det ska bli, brädet och resultatmeddelanden.
 class GameViewModel : ViewModel(){
     private val _players = MutableStateFlow<List<Player>>(emptyList())
     val players: StateFlow<List<Player>> get() = _players
 
     private val _boardState = MutableStateFlow(Array(3) { arrayOfNulls<String>(3) })
-    val boardState: StateFlow<Array<Array<String?>>> get() = _boardState
 
     private val _resultMessage = MutableStateFlow<String?>(null)
     val resultMessage: StateFlow<String?> get() = _resultMessage
@@ -36,6 +44,12 @@ class GameViewModel : ViewModel(){
 
     private val _challengeRequestCount = MutableStateFlow(0)
     val challengeRequestCount: StateFlow<Int> = _challengeRequestCount
+
+    private val _gameBoard = MutableStateFlow(GameBoard())
+    val gameBoard: StateFlow<GameBoard> get() = _gameBoard
+
+    private val _gameBoardDocumentId = MutableStateFlow<String?>(null)
+    val gameBoardDocumentId: StateFlow<String?> get() = _gameBoardDocumentId
 
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
@@ -108,23 +122,36 @@ class GameViewModel : ViewModel(){
         playersListener?.remove()
     }
 
-    fun makeMove(x: Int, y: Int){
-        if(_boardState.value[x][y] == null && _resultMessage.value == null){
-            val newBoardState = _boardState.value.map { it.copyOf() }.toTypedArray()
+    fun makeMove(cellKey: String){
+        if(_gameBoard.value.cells[cellKey] == null){
             val currentPlayerSymbol = getCurrentPlayerSymbol()
+            val updatedCells = _gameBoard.value.cells.toMutableMap()
+            updatedCells[cellKey] = currentPlayerSymbol
 
-            newBoardState[x][y] = currentPlayerSymbol
-            _boardState.value = newBoardState
-
-            if(gameLogic.checkWinner(newBoardState, currentPlayerSymbol)){
-                _resultMessage.value = "${getCurrentPlayerName()} has won!"
-
+            if(gameLogic.checkWinner(updatedCells, currentPlayerSymbol)){
+                _resultMessage.value = "${getCurrentPlayerName()} wins!"
+                return
             }
-            else if(newBoardState.all { row -> row.all { it != null } }){
+
+            if(updatedCells.values.all { it != null }){
                 _resultMessage.value = "It's a draw!"
+                return
             }
-            else{
-                _currentPlayerIndex.value = (_currentPlayerIndex.value + 1) % _players.value.size
+            _gameBoard.value = _gameBoard.value.copy(
+                cells = updatedCells,
+                currentPlayer = if(_gameBoard.value.currentPlayer == "player1") "player2" else "player1"
+            )
+
+            _gameBoardDocumentId.value?.let { documentId ->
+                db.collection("game_boards")
+                    .document(documentId)
+                    .update("cells", updatedCells, "currentPlayer", _gameBoard.value.currentPlayer)
+                    .addOnSuccessListener {
+                        println("Move updated successfully.")
+                    }
+                    .addOnFailureListener { e ->
+                        println("Error updating move: $e")
+                    }
             }
         }
     }
@@ -136,15 +163,19 @@ class GameViewModel : ViewModel(){
     }
 
     private fun getCurrentPlayerSymbol(): String{
-        return when(_currentPlayerIndex.value){
-            0 -> "X"
-            1 -> "O"
-            else -> throw IllegalStateException("Invalid player index: ${_currentPlayerIndex.value}")
+        return when (_gameBoard.value.currentPlayer) {
+            "player1" -> "X"
+            "player2" -> "O"
+            else -> throw IllegalStateException("Invalid current player")
         }
     }
 
-    fun getCurrentPlayerName(): String{
-        return _players.value.getOrNull(_currentPlayerIndex.value)?.name ?: "Player ${_currentPlayerIndex.value + 1}"
+    private fun getCurrentPlayerName(): String{
+        return when (_gameBoard.value.currentPlayer) {
+            "player1" -> _gameBoard.value.player1
+            "player2" -> _gameBoard.value.player2
+            else -> "Unknown Player"
+        }
     }
 
     override fun onCleared(){
@@ -152,26 +183,7 @@ class GameViewModel : ViewModel(){
         stopListeningToLobbyPlayers()
     }
 
-    private fun startGameWithPlayer(senderId: String, receiverId: String? = null){
-        val invitedPlayer = _players.value.find { it.playerId == senderId }
-        val currentPlayer = _players.value.find { it.playerId == _playerDocumentId.value }
-
-        if(invitedPlayer != null && currentPlayer != null){
-            _players.value = listOf(currentPlayer, invitedPlayer)
-            _currentPlayerIndex.value = 0
-
-            receiverId?.let {
-                _playerDocumentId.value = it
-            }
-
-            resetGame()
-        }
-        else{
-            println("Error: player not found")
-        }
-    }
-
-    fun sendChallenge(senderId: String, receiverId: String){
+    fun sendChallenge(senderId: String, receiverId: String, navController: NavController?){
         db.collection("challenges")
             .whereEqualTo("senderId", senderId)
             .whereEqualTo("receiverId", receiverId)
@@ -190,6 +202,12 @@ class GameViewModel : ViewModel(){
                         .add(challenge)
                         .addOnSuccessListener {
                             println("Challenge sent successfully.")
+
+                            val senderName = players.value.find { it.playerId == senderId }?.name ?: "Unknown Player"
+                            val receiverName = players.value.find { it.playerId == receiverId }?.name ?: "Unknown Player"
+
+                            createSharedGameBoard(senderName, receiverName)
+                            navController?.navigate("game")
                         }
                         .addOnFailureListener { e ->
                             println("Failed to send challenge: $e")
@@ -238,13 +256,29 @@ class GameViewModel : ViewModel(){
                             .addOnSuccessListener {
                                 println("Challenge accepted")
 
-                                startGameWithPlayer(challenge.senderId, challenge.receiverId)
+                                db.collection("game_boards")
+                                    .whereEqualTo("player1", players.value.find { it.playerId == challenge.senderId }?.name) // Query by player names
+                                    .whereEqualTo("player2", players.value.find { it.playerId == challenge.receiverId }?.name)
+                                    .get()
+                                    .addOnSuccessListener { documents ->
+                                        if(!documents.isEmpty){
+                                            val gameBoardDoc = documents.documents[0]
+                                            _gameBoardDocumentId.value = gameBoardDoc.id
+                                            loadGameBoard(gameBoardDoc.id) // Load the existing game board data
+                                            navController?.navigate("game")
+                                        }
+                                        else{
+                                            println("No game board found. This should not happen if a game was created.")
+                                        }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        println("Error getting game board document: $e")
+                                    }
 
                                 challengeDocRef.delete()
                                     .addOnSuccessListener {
                                         println("Challenge document deleted after acceptance")
                                         removeChallenge(challenge)
-                                        navController?.navigate("game")
                                     }
                                     .addOnFailureListener { e ->
                                         println("Failed to delete challenge after acceptance: $e")
@@ -271,7 +305,6 @@ class GameViewModel : ViewModel(){
             }
     }
 
-
     fun listenToChallengeRequests(){
         playerDocumentId.value?.let { playerId ->
             db.collection("challenges")
@@ -289,7 +322,7 @@ class GameViewModel : ViewModel(){
         }
     }
 
-    private fun removeChallenge(challenge: Challenge) {
+    private fun removeChallenge(challenge: Challenge){
         _challenges.value = _challenges.value.filterNot {
             it.senderId == challenge.senderId && it.receiverId == challenge.receiverId
         }
@@ -297,6 +330,109 @@ class GameViewModel : ViewModel(){
         if(_challengeRequestCount.value > 0){
             _challengeRequestCount.value -= 1
         }
+    }
+
+    fun createSharedGameBoard(player1Name: String, player2Name: String){
+        db.collection("game_boards")
+            .whereEqualTo("player1", player1Name)
+            .whereEqualTo("player2", player2Name)
+            .get()
+            .addOnSuccessListener { documents ->
+                if(documents.isEmpty){
+                    val newGameBoard = GameBoard(
+                        player1 = player1Name,
+                        player2 = player2Name,
+                        currentPlayer = "player1"
+                    )
+                    db.collection("game_boards")
+                        .add(newGameBoard)
+                        .addOnSuccessListener { documentReference ->
+                            _gameBoardDocumentId.value = documentReference.id
+                            println("Shared game board created with ID: ${documentReference.id}")
+                        }
+                        .addOnFailureListener { e ->
+                            println("Error creating shared game board: $e")
+                        }
+                }
+                else{
+                    val gameBoardDoc = documents.documents[0]
+                    _gameBoardDocumentId.value = gameBoardDoc.id
+                    println("Using existing shared game board with ID: ${gameBoardDoc.id}")
+                    loadGameBoard(gameBoardDoc.id)
+                }
+            }
+            .addOnFailureListener { e ->
+                println("Error checking for existing game board: $e")
+            }
+    }
+
+    fun loadGameBoard(documentId: String){
+        db.collection("game_boards")
+            .document(documentId)
+            .get()
+            .addOnSuccessListener { document ->
+                if(document.exists()){
+                    val gameBoard = document.toObject(GameBoard::class.java)
+                    _gameBoard.value = gameBoard ?: GameBoard()
+                }
+            }
+            .addOnFailureListener { e ->
+                println("Error loading game board: $e")
+            }
+    }
+
+    fun updateGameBoard(){
+        _gameBoardDocumentId.value?.let { documentId ->
+            val updatedGameBoard = _gameBoard.value
+
+            db.collection("game_boards")
+                .document(documentId)
+                .set(updatedGameBoard)
+                .addOnSuccessListener {
+                    println("Game board updated successfully.")
+                }
+                .addOnFailureListener { e ->
+                    println("Error updating game board: $e")
+                }
+        }
+    }
+
+    fun deleteGameBoard(onComplete: (Boolean) -> Unit){
+        _gameBoardDocumentId.value?.let { documentId ->
+            db.collection("game_boards")
+                .document(documentId)
+                .delete()
+                .addOnSuccessListener {
+                    println("Game board document deleted successfully.")
+                    _gameBoardDocumentId.value = null
+                    onComplete(true)
+                }
+                .addOnFailureListener { e ->
+                    println("Error deleting game board: $e")
+                    onComplete(false)
+                }
+        } ?: run {
+            println("No game board document ID found.")
+            onComplete(false)
+        }
+    }
+
+    fun listenToGameBoard(documentId: String){
+        db.collection("game_boards")
+            .document(documentId)
+            .addSnapshotListener { snapshot, e ->
+                if(e != null){
+                    println("Listen failed: $e")
+                    return@addSnapshotListener
+                }
+
+                snapshot?.let {
+                    val updatedGameBoard = it.toObject(GameBoard::class.java)
+                    if(updatedGameBoard != null){
+                        _gameBoard.value = updatedGameBoard
+                    }
+                }
+            }
     }
 
 }

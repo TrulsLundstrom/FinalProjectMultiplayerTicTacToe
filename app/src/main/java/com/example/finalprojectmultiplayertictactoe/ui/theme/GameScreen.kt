@@ -22,21 +22,44 @@ import com.example.finalprojectmultiplayertictactoe.GameViewModel
 
 @Composable
 fun GameScreen(navController: NavController, gameViewModel: GameViewModel){
-    val boardState = gameViewModel.boardState.collectAsState().value
+    val boardState = gameViewModel.gameBoard.collectAsState().value
     val resultMessage = gameViewModel.resultMessage.collectAsState().value
-    val currentPlayerName = gameViewModel.getCurrentPlayerName()
+    val gameBoardId = gameViewModel.gameBoardDocumentId.collectAsState().value
+
+    val players = gameViewModel.players.collectAsState().value
+
+    val currentPlayerName = when (boardState.currentPlayer){
+        "player1" -> boardState.player1
+        "player2" -> boardState.player2
+        else -> "Unknown Player"
+    }
+
+    LaunchedEffect(gameBoardId, players){
+        if (gameBoardId == null){
+            val player1Name = players.find { it.playerId == "player1" }?.name ?: "Unknown Player 1"
+            val player2Name = players.find { it.playerId == "player2" }?.name ?: "Unknown Player 2"
+
+            gameViewModel.createSharedGameBoard(player1Name, player2Name)
+        }
+        else{
+            gameViewModel.loadGameBoard(gameBoardId)
+            gameViewModel.listenToGameBoard(gameBoardId)
+        }
+    }
+
+    LaunchedEffect(boardState){
+        gameViewModel.updateGameBoard()
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ){
-        LaunchedEffect(Unit){
-            gameViewModel.resetGame()
-        }
-
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ){
@@ -48,16 +71,33 @@ fun GameScreen(navController: NavController, gameViewModel: GameViewModel){
             )
 
             GameBoard(
-                boardState = boardState,
+                boardState = boardState.cells,
                 onCellClick = { x, y ->
-                    gameViewModel.makeMove(x, y)
+                    val cellKey = "$x$y"
+                    gameViewModel.makeMove(cellKey)
                 }
             )
 
-            resultMessage?.let {
-                LaunchedEffect(resultMessage){
-                    navController.navigate("result")
+            resultMessage?.let { message ->
+                LaunchedEffect(resultMessage) {
+                    gameViewModel.deleteGameBoard { success ->
+                        if(success){ // TA KANSKE BORT DETTA
+                            println("Game board deleted successfully.")
+                        }
+                        else{
+                            println("Failed to delete game board.")
+                        }
+                        navController.navigate("result")
+                    }
                 }
+
+                Text(
+                    text = message,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             }
         }
     }

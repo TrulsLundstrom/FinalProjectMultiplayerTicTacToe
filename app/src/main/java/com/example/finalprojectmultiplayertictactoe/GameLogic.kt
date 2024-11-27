@@ -2,23 +2,25 @@ package com.example.finalprojectmultiplayertictactoe
 
 class GameLogic{
 
-    fun checkWinner(board: Array<Array<String?>>, player: String): Boolean{
+    fun checkWinner(board: Map<String, String?>, player: String): Boolean{
         val winningCombinations = listOf(
-            listOf(Pair(0, 0), Pair(0, 1), Pair(0,2)),
-            listOf(Pair(1, 0), Pair(1, 1), Pair(1,2)),
-            listOf(Pair(2, 0), Pair(2, 1), Pair(2,2)),
+            // horisontella rader
+            listOf("00", "01", "02"),
+            listOf("10", "11", "12"),
+            listOf("20", "21", "22"),
 
-            listOf(Pair(0, 0), Pair(1, 0), Pair(2,0)),
-            listOf(Pair(0, 1), Pair(1, 1), Pair(2,1)),
-            listOf(Pair(0, 2), Pair(1, 2), Pair(2,2)),
+            // vertikala kolumner
+            listOf("00", "10", "20"),
+            listOf("01", "11", "21"),
+            listOf("02", "12", "22"),
 
-            listOf(Pair(0, 0), Pair(1, 1), Pair(2,2)),
-            listOf(Pair(0, 2), Pair(1, 1), Pair(2,0))
-
+            // diagonaler
+            listOf("00", "11", "22"),
+            listOf("02", "11", "20")
         )
 
-        return winningCombinations.any{ combination ->
-            combination.all { (x, y) -> board[x][y] == player }
+        return winningCombinations.any { combination ->
+            combination.all { position -> board[position] == player }
         }
     }
 }

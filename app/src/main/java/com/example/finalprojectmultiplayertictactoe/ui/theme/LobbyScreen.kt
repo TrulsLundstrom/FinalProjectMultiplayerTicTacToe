@@ -101,7 +101,7 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
                     )
                     if(currentPlayerId != null && player.playerId != currentPlayerId){
                         Button(onClick = {
-                            gameViewModel.sendChallenge(senderId = currentPlayerId!!, receiverId = player.playerId)
+                            gameViewModel.sendChallenge(senderId = currentPlayerId!!, receiverId = player.playerId, navController = navController) // kompileringsfel: " No value passed for parameter 'navController' "
                         }){
                             Text(text = "Challenge")
                         }
