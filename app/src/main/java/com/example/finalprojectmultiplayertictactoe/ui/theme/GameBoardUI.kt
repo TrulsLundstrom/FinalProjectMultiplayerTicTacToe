@@ -21,6 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/*
+boardState: brädets nuvarande tillstånd
+onCellClick:
+ */
 @Composable
 fun GameBoard(boardState: Map<String, String?>, onCellClick: (Int, Int) -> Unit){
     Column(
@@ -28,19 +32,19 @@ fun GameBoard(boardState: Map<String, String?>, onCellClick: (Int, Int) -> Unit)
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        for(i in 0..2){
+        for(i in 0..2){ // loopar igenom raderna 0-2
             Row{
-                for(j in 0..2){
-                    val cellKey = "$i$j"
+                for(j in 0..2){ // loopar igenom kolumnerna 0-2 i varje rad
+                    val cellKey = "$i$j" // skapar en nyckel för cell (ruta). $ används för att sätta samman i och j till en sträng.
                     Box(
                         modifier = Modifier
                             .size(128.dp)
-                            .border(1.dp, Color.Black)
+                            .border(1.dp, Color.Black) // kantlinje runt varje cell
                             .clickable { onCellClick(i, j) },
                         contentAlignment = Alignment.Center
                     ){
                         Text(
-                            text = boardState[cellKey] ?: "",
+                            text = boardState[cellKey] ?: "", // OM det finns ett värde för den aktuella cellen (cellkey) i boardState, används det som en text. Om cellen är tom dvs "" så ser cellen tom ut.
                             fontSize = 48.sp
                         )
                     }

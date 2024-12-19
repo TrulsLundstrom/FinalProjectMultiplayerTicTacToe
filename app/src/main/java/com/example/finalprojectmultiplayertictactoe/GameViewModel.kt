@@ -10,18 +10,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-data class GameBoard(
-    val cells: Map<String, String?> = mapOf(
-        "00" to null, "01" to null, "02" to null,
-        "10" to null, "11" to null, "12" to null,
-        "20" to null, "21" to null, "22" to null
-    ),
-    val player1: String = "",
-    val player2: String = "",
-    val currentPlayer: String = ""
-)
 
 class GameViewModel : ViewModel(){
+
+    // DESSA TVÅ ANVÄNDS NEDANFÖR
+    // privata variabler (_variabelNamn)
+    // custom getter för att returnera privata variabler (_variabelNamn)
+
+
     private val _players = MutableStateFlow<List<Player>>(emptyList())
     val players: StateFlow<List<Player>> get() = _players
 
@@ -32,7 +28,7 @@ class GameViewModel : ViewModel(){
 
     private val db = FirebaseFirestore.getInstance()
     private val gameLogic = GameLogic()
-    private var playersListener: ListenerRegistration? = null
+    private var playersListener: ListenerRegistration? = null // med ListenerRegristration så kan man ta bort lyssnaren
 
     private val _currentPlayerIndex = MutableStateFlow(0)
 
@@ -50,29 +46,38 @@ class GameViewModel : ViewModel(){
 
     private val _gameBoardDocumentId = MutableStateFlow<String?>(null)
     val gameBoardDocumentId: StateFlow<String?> get() = _gameBoardDocumentId
-
+// "player"
     fun addPlayerToLobby(playerName: String){
         db.collection("players")
             .get()
             .addOnSuccessListener { documents ->
-
-                val existingPlayerIds = documents.mapNotNull { document ->
-                    document.getString("playerId")?.removePrefix("player")?.toIntOrNull()
+                val existingPlayerIds = documents.mapNotNull { document -> // skapar en ny lista där alla null filtreras bort
+                    document.getString("playerId")?.removePrefix("player")?.toIntOrNull() // hämtar värdet för fielden "playerId". tar bort "player" från början av strängen. toIntOrNull konverterar strängen till en int
                 }
-                val nextPlayerId = (1..existingPlayerIds.size + 1)
-                    .firstOrNull { it !in existingPlayerIds }
-                    ?: existingPlayerIds.maxOrNull()?.plus(1) ?: 1
+                val nextPlayerId = (1..existingPlayerIds.size + 1) // om det fanns 2 befintliga spelare i listan, så kommer intervallet att vara från 1 till 4
+                    .firstOrNull { it !in existingPlayerIds } // hittar det första talet i intervallet som inte finns i existingPlayerIds. firstOrNull, returnerar första elementet som matchar villkoret, eller null om inget matchande element finns
+                    ?: existingPlayerIds.maxOrNull()?.plus(1) ?: 1 // om det ovanför ger null (dvs det finns inget ledigt playerId som hittades i intervallet), så kommer existingPlayerIds.maxOrNull() returnera det största heltalet eller null om listan är tom
+
+
+                // alltså: gör en lista utan null =>  playerId är "player1", "player2" osv. Vi vill ta bort prefixet "player" så att bara "1", "2" finns kvar
+                // => när strängen är "1" konverteras det till en int 1 => firstOrNull går igenom listan tills ett en tal inte finns. it representerar ett tal i intervallet
+                // !in existingPlayerIds säger: "detta talet finns inte i existingPlayerIds",
+
+                // alltså: om existingPlayerIds innehåller [1,2,3], intervallet blir då 1,2,3,4. Vi letar vid !in existingPlayerIds, dvs vi kollar vilket tal
+                // som finns existingPlayerIds men inte i intervallet. Det talet som finns i intervallet men inte i existingPlayerIds kommer användas som det nya playerId
 
                 val newPlayerId = "player$nextPlayerId"
 
-                val playerData = hashMapOf(
-                    "name" to playerName,
+                // nyckel: representerar datan
+                // detta är ett sätt att lagra datan, i detta fall kommer den lagra data som kommer att användas när ett nytt dokument i collectionet players skapas
+
+                val playerData = hashMapOf( // data till ett nytt dokument som skapas i collectionet players
+                    "name" to playerName, // nyckel ("name") och data (playerName).
                     "playerId" to newPlayerId,
-                    "invitation" to "notSent"
                 )
 
                 db.collection("players")
-                    .add(playerData)
+                    .add(playerData) // skapar ett nytt dokument med datan som playerData innehåller
                     .addOnSuccessListener { documentReference ->
                         _playerDocumentId.value = documentReference.id
                         println("Player added with ID: ${documentReference.id}")
@@ -84,25 +89,41 @@ class GameViewModel : ViewModel(){
     }
 
     fun listenToLobbyPlayers(){
-        playersListener = db.collection("players")
+        playersListener = db.collection("players") // hämtar collection "players" från firestore
+            // addSnapShotListener sätter upp en "lyssnare" för ändringar i samlingen "players"
+            // snapshots innehåller den nya listan av dokument
+            // e används för att kontrollera fel
             .addSnapshotListener { snapshots, e ->
                 if(e != null){
                     println("Listen failed: $e")
-                    return@addSnapshotListener
+                    return@addSnapshotListener // avslutar lyssnaren
                 }
 
-                snapshots?.let {
-                    val updatedPlayers = it.map { document ->
-                        Player(
-                            playerId = document.id,
-                            name = document.getString("name") ?: "",
-                            invitation = document.getString("invitation") ?: ""
-                        )
-                    }
+                snapshots?.let { // exekvera bara det nedan om snapshots inte är null (dvs det finns dokument att hantera)
+                    val updatedPlayers = it.map { document -> Player(playerId = document.id, name = document.getString("name") ?: "") }
                     _players.value = updatedPlayers
                 }
             }
     }
+
+    /*
+    it = är en referens till snapshots, som är en lista över alla document i collectionet "players"
+
+    it.map, map går igenom varje dokument i snapshots och omvandlar den till Player objekt
+
+    document.id, hämtar dokumentets unika ID
+
+    document.getString("name"), hämtar namnet på spelaren från dokumentet
+
+    ?: "" , om namnet är null så används en tom sträng istället
+
+    detta kommer skapa en ny lista som innehåller alla nya spelare, och tilldelar den sedan till variabeln updatedPlayers
+
+    snapshots används för att läsa data från dokumenten i en collection.
+
+    ?.let = om snapshots inte är null så kör funktionen
+
+     */
 
     fun deletePlayerFromLobby(documentId: String, onComplete: (Boolean) -> Unit){
         db.collection("players")
@@ -119,30 +140,35 @@ class GameViewModel : ViewModel(){
     }
 
     private fun stopListeningToLobbyPlayers(){
-        playersListener?.remove()
+        playersListener?.remove() // tar bort lyssnaren
     }
 
     fun makeMove(cellKey: String){
         if(_gameBoard.value.cells[cellKey] == null){
             val currentPlayerSymbol = getCurrentPlayerSymbol()
-            val updatedCells = _gameBoard.value.cells.toMutableMap()
+
+            // cells är immuteable (går ej att  förändra).
+            // toMutable skapar här en kopia av cells som går att förändras (cells blir mutable)
+            val updatedCells = _gameBoard.value.cells.toMutableMap() // updatedCells blir då en mutable kopia av cells. Utan toMutableMap så skulle updatedCells också vara immutable
             updatedCells[cellKey] = currentPlayerSymbol
 
             if(gameLogic.checkWinner(updatedCells, currentPlayerSymbol)){
                 _resultMessage.value = "${getCurrentPlayerName()} wins!"
-                return
+                return // hoppar ut från funktionen
             }
 
             if(updatedCells.values.all { it != null }){
                 _resultMessage.value = "It's a draw!"
                 return
             }
-            _gameBoard.value = _gameBoard.value.copy(
+            _gameBoard.value = _gameBoard.value.copy( // copy skapar en ny gameBoard med uppdaterad värde
                 cells = updatedCells,
                 currentPlayer = if(_gameBoard.value.currentPlayer == "player1") "player2" else "player1"
             )
 
             _gameBoardDocumentId.value?.let { documentId ->
+
+                // uppdaterar ett befintligt dokument(s fields) i collectionet game_boards
                 db.collection("game_boards")
                     .document(documentId)
                     .update("cells", updatedCells, "currentPlayer", _gameBoard.value.currentPlayer)
@@ -163,7 +189,7 @@ class GameViewModel : ViewModel(){
     }
 
     private fun getCurrentPlayerSymbol(): String{
-        return when (_gameBoard.value.currentPlayer) {
+        return when(_gameBoard.value.currentPlayer){
             "player1" -> "X"
             "player2" -> "O"
             else -> throw IllegalStateException("Invalid current player")
@@ -171,7 +197,7 @@ class GameViewModel : ViewModel(){
     }
 
     private fun getCurrentPlayerName(): String{
-        return when (_gameBoard.value.currentPlayer) {
+        return when(_gameBoard.value.currentPlayer){
             "player1" -> _gameBoard.value.player1
             "player2" -> _gameBoard.value.player2
             else -> "Unknown Player"
@@ -248,7 +274,7 @@ class GameViewModel : ViewModel(){
             .whereEqualTo("receiverId", challenge.receiverId)
             .get()
             .addOnSuccessListener { snapshots ->
-                for(document in snapshots){
+                for(document in snapshots){ //
                     val challengeDocRef = db.collection("challenges").document(document.id)
 
                     if(accept){
@@ -257,14 +283,14 @@ class GameViewModel : ViewModel(){
                                 println("Challenge accepted")
 
                                 db.collection("game_boards")
-                                    .whereEqualTo("player1", players.value.find { it.playerId == challenge.senderId }?.name) // Query by player names
+                                    .whereEqualTo("player1", players.value.find { it.playerId == challenge.senderId }?.name)
                                     .whereEqualTo("player2", players.value.find { it.playerId == challenge.receiverId }?.name)
                                     .get()
                                     .addOnSuccessListener { documents ->
                                         if(!documents.isEmpty){
                                             val gameBoardDoc = documents.documents[0]
                                             _gameBoardDocumentId.value = gameBoardDoc.id
-                                            loadGameBoard(gameBoardDoc.id) // Load the existing game board data
+                                            loadGameBoard(gameBoardDoc.id)
                                             navController?.navigate("game")
                                         }
                                         else{
@@ -323,7 +349,7 @@ class GameViewModel : ViewModel(){
     }
 
     private fun removeChallenge(challenge: Challenge){
-        _challenges.value = _challenges.value.filterNot {
+        _challenges.value = _challenges.value.filterNot { // true => elementet exkluderas/tas bort , false => elementet stannar kvar
             it.senderId == challenge.senderId && it.receiverId == challenge.receiverId
         }
 
@@ -337,7 +363,7 @@ class GameViewModel : ViewModel(){
             .whereEqualTo("player1", player1Name)
             .whereEqualTo("player2", player2Name)
             .get()
-            .addOnSuccessListener { documents ->
+            .addOnSuccessListener { documents -> // lyssnar om get lyckades
                 if(documents.isEmpty){
                     val newGameBoard = GameBoard(
                         player1 = player1Name,
@@ -355,7 +381,7 @@ class GameViewModel : ViewModel(){
                         }
                 }
                 else{
-                    val gameBoardDoc = documents.documents[0]
+                    val gameBoardDoc = documents.documents[0] //
                     _gameBoardDocumentId.value = gameBoardDoc.id
                     println("Using existing shared game board with ID: ${gameBoardDoc.id}")
                     loadGameBoard(gameBoardDoc.id)
@@ -402,7 +428,7 @@ class GameViewModel : ViewModel(){
             db.collection("game_boards")
                 .document(documentId)
                 .delete()
-                .addOnSuccessListener {
+                .addOnSuccessListener { // om delete LYCKADES (success)
                     println("Game board document deleted successfully.")
                     _gameBoardDocumentId.value = null
                     onComplete(true)
@@ -411,7 +437,7 @@ class GameViewModel : ViewModel(){
                     println("Error deleting game board: $e")
                     onComplete(false)
                 }
-        } ?: run {
+        } ?: run { // om _gameBoardDocumentId.value är null, kör (run) detta istället
             println("No game board document ID found.")
             onComplete(false)
         }
@@ -427,7 +453,7 @@ class GameViewModel : ViewModel(){
                 }
 
                 snapshot?.let {
-                    val updatedGameBoard = it.toObject(GameBoard::class.java)
+                    val updatedGameBoard = it.toObject(GameBoard::class.java) // konverterar datan i snapshot (dokumenten i game_boards) till ett objekt av typen GameBoard
                     if(updatedGameBoard != null){
                         _gameBoard.value = updatedGameBoard
                     }
@@ -436,3 +462,9 @@ class GameViewModel : ViewModel(){
     }
 
 }
+
+/*
+it = refererar till snapshot och snapshot representerar game_boards dokumenten
+
+ */
+

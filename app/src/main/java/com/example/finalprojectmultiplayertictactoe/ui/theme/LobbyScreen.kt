@@ -40,15 +40,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
+
+    // hämtar en lista med spelare i lobbyn
     val players by gameViewModel.players.collectAsStateWithLifecycle()
+
+    // hämtar den nuvarande spelarens dokument id
     val currentPlayerId by gameViewModel.playerDocumentId.collectAsStateWithLifecycle(initialValue = null)
+
+    // hämtar värdet på en räknare som räknar antalet utmaningar en spelare har
     val challengeRequestCount by gameViewModel.challengeRequestCount.collectAsStateWithLifecycle(initialValue = 0)
 
-    LaunchedEffect(Unit){
+    // lyssnar på ändringar i lobbyns spelare
+    LaunchedEffect(Unit){ // Unit => körs ENDAST EN GÅNG, vilket är när LobbyScreen först skapas
         gameViewModel.listenToLobbyPlayers()
     }
 
-    LaunchedEffect(currentPlayerId){
+    // lyssnar på utmanings förfrågningar OM spelaren har ett existerande ID
+    LaunchedEffect(currentPlayerId){ // koden nedan körs då currentPlaterId förändras
         if(currentPlayerId != null){
             gameViewModel.listenToChallengeRequests()
         }
@@ -79,12 +87,15 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // loopar igenom alla spelare i lobbyn och visar dem som kort (forEach går igenom alla players objekt, genom att skicka in players till inparametern player)
+        // players är listan med Player objekt. players.forEach gör så att man itererar över allt i listan. Inparametern player representerar ETT objekt från listan under varje varv
+        // detta kan jämföras med att iterera igenom en array
         players.forEach { player ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                elevation = CardDefaults.elevatedCardElevation(4.dp),
+                elevation = CardDefaults.elevatedCardElevation(4.dp), //
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ){
                 Row(
@@ -99,9 +110,12 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
                         fontSize = 20.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+
+
+                    // man ska inte kunna bjuda in sig själv, därför visas en knapp "Challenge" för andra spelare men inte vid sitt egna namn.
                     if(currentPlayerId != null && player.playerId != currentPlayerId){
                         Button(onClick = {
-                            gameViewModel.sendChallenge(senderId = currentPlayerId!!, receiverId = player.playerId, navController = navController) // kompileringsfel: " No value passed for parameter 'navController' "
+                            gameViewModel.sendChallenge(senderId = currentPlayerId!!, receiverId = player.playerId, navController = navController)
                         }){
                             Text(text = "Challenge")
                         }
@@ -130,3 +144,16 @@ fun LobbyScreen(navController: NavController, gameViewModel: GameViewModel){
     }
 }
 
+/*
+förklaring varför man kan jämföra playerId och currentPlayerId (nuvarande spelares document ID)
+
+
+Document ID och fields är relaterade till en specifik spelare.
+Man kan därför jämföra fields och document ID och man kan kontrollera om de båda är relaterade till samma spelare eller inte, genom t.ex en if-sats.
+
+forEach loopen går igenom alla spelare i lobbyn och i if-satsten så kontrolleras om dokument ID (currentPlayerId) och den nuvarande playerId är båda relaterade till samma spelare.
+Om de INTE är relaterade till samma spelare så ska "Challenge" knappen visas på skärmen. Om de ÄR relaterade till samma spelare så ska den inte visas.
+
+jag skulle även kunna jämför spelarnas namn och jämföra med document ID, men det finns ju en risk att spelarna har samma namn.
+
+ */

@@ -23,36 +23,30 @@ import com.example.finalprojectmultiplayertictactoe.ui.theme.ResultScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.GameScreen
 import com.example.finalprojectmultiplayertictactoe.ui.theme.PlayerNameInputScreen
 
-import java.util.concurrent.CountDownLatch
 
-
-data class Player(
-    val playerId: String = "",
-    var name: String = "",
-    var invitation: String = ""
-)
 
 
 
 // hanterar appens livscycel och navigerar
 class MainActivity : ComponentActivity(){
-    private val gameViewModel: GameViewModel by viewModels()
-    private var playerDocumentId: String? = null
+    private val gameViewModel: GameViewModel by viewModels() // skapar en instans av GameViewModel
+    private var playerDocumentId: String? = null // lagrar spelarens dokument ID. String eller null
 
-    override fun onCreate(savedInstanceState: Bundle?){
+    override fun onCreate(savedInstanceState: Bundle?){ // körs när appen startar, används för att sätta upp allt som behövs för att visa skärmen för användaren
         super.onCreate(savedInstanceState)
 
-        setContent{
-            val navController = rememberNavController()
-            val playerDocumentIdState = gameViewModel.playerDocumentId.collectAsState()
+        setContent{ // sätter upp hela innehållet på skärmen m.h.a jetpack compose
 
-            playerDocumentId = playerDocumentIdState.value
+            val navController = rememberNavController() // rememberNavController() skapar en kontroller för att hantera navigering mellan olika skärmar i appen
+            val playerDocumentIdState = gameViewModel.playerDocumentId.collectAsState() // hämtar spelarens dokument ID från ViewModel. ViewModel är en plats där appen kan lagra och hantera data så att den kan användas på olika skärmar i appen
+
+            playerDocumentId = playerDocumentIdState.value // Variabel för att lagra spelarens dokument ID. Den används för att identifiera vilken spelare som har anslutit till lobbyn
 
             playerDocumentId?.let { id ->
-                gameViewModel.listenToChallenges(id)
+                gameViewModel.listenToChallenges(id) // appen lyssnar på om det finns nya utmaningar
             }
 
-            MaterialTheme(
+            MaterialTheme( // färgtemat för appen
                 colorScheme = lightColorScheme(
                     primary = Color(0xFF003366),
                     secondary = Color(0xFF66AAFF),
@@ -64,35 +58,41 @@ class MainActivity : ComponentActivity(){
                     onSurface = Color(0xFF333333)
                 )
             ){
-
+                // NavHost skapar en container för navigering (container . Här definieras alla de skärmar som användarna kan gå mellan.
                 NavHost(navController = navController, startDestination = "nameInput"){
-                    composable("nameInput"){
+                    composable("nameInput"){ // skärm för att skriva sitt namn (start skärmen)
                         PlayerNameInputScreen(
                             gameViewModel = gameViewModel,
-                            onContinue = {
+                            onContinue = { // när användaren fortsätter, så navigeras man till "lobby" skärmen
                                 navController.navigate("lobby")
                             }
                         )
                     }
 
-                    composable("lobby"){
+                    // composable används för att skapa varje skärm i appen. I @Composable (som anropas nedanför) definieras vad som ska hända i varje skärm
+                    composable("lobby"){ // lobby skärm
                         LobbyScreen(navController = navController, gameViewModel = gameViewModel)
                     }
 
-                    composable("game"){
+                    composable("game"){ // skärm för spelbrädan
                         GameScreen(navController = navController, gameViewModel = gameViewModel)
                     }
 
-                    composable("result"){
+                    composable("result"){ // skärm för resultatet
                         val resultMessage by gameViewModel.resultMessage.collectAsState()
 
                         ResultScreen(resultMessage = resultMessage, navController = navController){
+
+                            // återställer spelet
                             gameViewModel.resetGame()
-                            navController.navigate("lobby")
+
+                            // denna navigering lägger "lobby" på back-stacken ENDAST om den INTE redan finns där.
+                            // Eftersom stacken oftast rensas i ResultScreen så innebär detta att "lobby" är den enda skärmen kvar
+                            navController.navigate("lobby") // sätter "lobby" skärmen på back stacken men NAVIGERAR INTE.
                         }
                     }
 
-                    composable("challengeRequests"){
+                    composable("challengeRequests"){ // skärmen med utmaningarna
                         ChallengeRequestScreen(navController = navController, gameViewModel = gameViewModel)
                     }
                 }
@@ -100,18 +100,12 @@ class MainActivity : ComponentActivity(){
         }
     }
 
+    // anropas när appen stängs av. Jag använder den för att ta bort spelare lobbyn, de har ju avslutat appen och ska därför inte finnas kvar i Firestore och i lobbyn
     override fun onStop(){
         super.onStop()
-        playerDocumentId?.let { documentId ->
-            val countDownLatch = CountDownLatch(1)
-            gameViewModel.deletePlayerFromLobby(documentId){ isSuccess ->
-                countDownLatch.countDown()
-                if(isSuccess){
-                    println("player document deleted successfully")
-                }
-                else{
-                    println("failed to delete document")
-                }
+        playerDocumentId?.let { documentId -> // om det finns ett dokument ID för spelaren...
+            gameViewModel.deletePlayerFromLobby(documentId){ isSuccess -> // ta bort spelaren från lobbyn
+                println(if(isSuccess) "player document deleted sucessfully" else "failed to delete document")
             }
         }
     }
